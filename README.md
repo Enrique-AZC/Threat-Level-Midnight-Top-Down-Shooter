@@ -10,37 +10,37 @@ The project demonstrates the application of object-oriented patterns in JavaScri
 
 ## Features  
 
--  **Top-Down Shooter Mechanics**  
+- 🎮 **Top-Down Shooter Mechanics**  
   - WASD movement  
   - Mouse aiming & shooting  
   - Dash with invincibility frames  
 
--  **Dynamic Enemies**  
+- 💀 **Dynamic Enemies**  
   - Procedural patrol/chase AI  
   - Collision handling with map solids  
   - Projectile-based combat  
 
--  **Boss System**  
+- 👹 **Boss System**  
   - Multi-phase boss (**TOBY**) with distinct attack patterns:  
     - Directed shots  
     - Cross burst  
     - Bullet rain  
 
--  **Adaptive Difficulty**  
+- 🧠 **Adaptive Difficulty**  
   - Time-based scaling system  
   - Procedural spawning with parameter adjustments (HP, speed, spawn interval)  
 
--  **HUD & UI Overlay**  
+- 📊 **HUD & UI Overlay**  
   - Health bar with dynamic states  
   - Combo multiplier with decay  
   - Score and difficulty scaling indicators  
   - Overlay panels for **Pause, Game Over, Victory**  
 
--  **Synthesized Audio**  
+- 🔊 **Synthesized Audio**  
   - Procedural sound effects via Web Audio API  
   - No external audio assets required  
 
--  **Visual FX**  
+- 🖼️ **Visual FX**  
   - Camera shake on impact  
   - Blood particle effects  
   - Screen vignette post-processing  
@@ -95,7 +95,8 @@ The project demonstrates the application of object-oriented patterns in JavaScri
    ```bash
    git clone https://github.com/yourusername/threat-level-midnight-topdown.git
    cd threat-level-midnight-topdown
-2. Open `index.html` in a browser.  
+   2. Open `index.html` in a browser.
+2. Open `index.html` in a browser.
 3. Play.  
 
 ---
@@ -118,3 +119,4 @@ This project is a practical study of:
 - Power-ups and weapon variety  
 - Persistent scoring / leaderboard system  
 - Mobile/touch support  
+
