@@ -308,7 +308,9 @@
             inset: 0;
             display: grid;
             place-items: center;
-            pointer-events: none
+            z-index: 2000;
+            pointer-events: none;
+            
         }
 
         /* --- Menú de pausa mejorado --- */
@@ -317,6 +319,7 @@
             border: 2px solid #2a3547;
             border-radius: 16px;
             padding: 32px 24px;
+            z-index: 2000;
             width: min(460px, 92vw);
             text-align: center;
             box-shadow: 0 20px 80px rgba(0, 0, 0, 0.65);
@@ -334,6 +337,7 @@
         .panel p {
             font-size: 14px;
             line-height: 1.6;
+            z-index: 2000;
             margin-bottom: 24px;
             opacity: 0.85;
         }
@@ -341,10 +345,12 @@
         .panel .btn {
             min-width: 160px;
             font-size: 15px;
+            z-index: 2000;
         }
 
         .panel .btn+.btn {
             margin-left: 12px;
+            z-index: 2000;
         }
 
         @keyframes fadeIn {
@@ -1164,25 +1170,7 @@
             constructor(x, y, vx, vy, from) { this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.from = from; this.life = 70; }
             update() {
                 this.x += this.vx; this.y += this.vy; this.life--; if (this.life <= 0) this.dead = true;
-                for (const s of world.solids) {
-                    if (AABB(this.x - 2, this.y - 2, 4, 4, s.x, s.y, s.w, s.h)) {
-                        if (this.from === 'p') {
-                            // 🔥 Rebotan solo las del jugador
-                            if (this.x < s.x || this.x > s.x + s.w) this.vx *= -1;
-                            if (this.y < s.y || this.y > s.y + s.h) this.vy *= -1;
-
-                            // un poquito de pérdida de velocidad para que no queden infinitas
-                            this.vx *= 0.9;
-                            this.vy *= 0.9;
-
-                        } else {
-                            // 👾 Las de los enemigos siguen muriendo al chocar
-                            this.dead = true;
-                            pop(this.x, this.y);
-                        }
-                    }
-                }
-
+                for (const s of world.solids) { if (AABB(this.x - 2, this.y - 2, 4, 4, s.x, s.y, s.w, s.h)) { this.dead = true; pop(this.x, this.y); } }
                 if (this.dead) return;
                 if (this.from === 'p') { for (const e of world.enemies) { if (e.alive && Math.hypot(this.x - e.x, this.y - e.y) < 12) { e.damage(TUNING.dmgFromPlayerBullet); this.dead = true; scoreKillPartial(e); break; } } }
                 else { if (world.player.alive && Math.hypot(this.x - world.player.x, this.y - world.player.y) < 12) { world.player.damage(TUNING.dmgFromEnemyBullet); this.dead = true; } }
