@@ -914,6 +914,20 @@
         bossSprites.down_left.src = "./tI.png";
         bossSprites.down_right.src = "./tD.png";
 
+        const powerUpImages = {
+            heal: new Image(),
+            rapid: new Image(),
+            speed: new Image(),
+            rain: new Image()
+        };
+
+        powerUpImages.heal.src = "power_heal.png";
+        powerUpImages.rapid.src = "power_rapid.png";
+        powerUpImages.speed.src = "power_speed.png";
+        powerUpImages.rain.src = "power_rain.png";
+
+
+
         const activePowerupTimeouts = [];
         const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -969,10 +983,15 @@
                 // --- Disparo ---
                 if (mouse.down && this.cd <= 0) {
                     if (this.rainMode) {
-                        // dispara en lluvia (como el boss fase 3)
-                        for (let i = 0; i < 5; i++) {
-                            let offset = (Math.random() - 0.5) * 200;
-                            world.bullets.push(new Bullet(this.x + offset, this.y, 0, 7, 'p'));
+                        // 💥 disparo radial en 360º
+                        const bulletsPerRing = 12; // cuántas balas por disparo
+                        const speed = 7;
+
+                        for (let i = 0; i < bulletsPerRing; i++) {
+                            const angle = (i / bulletsPerRing) * Math.PI * 2;
+                            const vx = Math.cos(angle) * speed;
+                            const vy = Math.sin(angle) * speed;
+                            world.bullets.push(new Bullet(this.x, this.y, vx, vy, 'p'));
                         }
                     } else {
                         let dirX, dirY;
@@ -1343,13 +1362,13 @@
             constructor(x, y, type, permanent = false) {
                 this.x = x;
                 this.y = y;
-                this.w = 16;
-                this.h = 16;
+                this.w = 26; // ancho del sprite
+                this.h = 26; // alto del sprite
                 this.type = type;
                 this.permanent = permanent;
                 this.life = permanent ? Infinity : 600; // infinito si viene del mapa
+                this.dead = false;
             }
-
 
             update() {
                 if (!this.permanent) {
@@ -1365,18 +1384,19 @@
                 }
             }
 
-
             draw() {
                 ctx.save();
                 ctx.translate(this.x - camera.x, this.y - camera.y);
-                ctx.fillStyle =
-                    this.type === "heal" ? "#4ade80" :
-                        this.type === "rapid" ? "#facc15" :
-                            this.type === "speed" ? "#60a5fa" :
-                                "#ff3b3b"; // lluvia del boss
-                ctx.beginPath();
-                ctx.arc(0, 0, 8, 0, TAU);
-                ctx.fill();
+
+                const img = powerUpImages[this.type];
+                if (img && img.complete) {
+                    ctx.drawImage(img, -this.w / 2, -this.h / 2, this.w, this.h);
+                } else {
+                    // fallback: cuadradito amarillo
+                    ctx.fillStyle = "yellow";
+                    ctx.fillRect(-this.w / 2, -this.h / 2, this.w, this.h);
+                }
+
                 ctx.restore();
             }
 
@@ -1386,22 +1406,31 @@
                 } else if (this.type === "rapid") {
                     if (p._rapidTimer) clearTimeout(p._rapidTimer);
                     p.cdBoost = 0.5;
-                    p._rapidTimer = setTimeout(() => { p.cdBoost = 1; p._rapidTimer = null; }, 10000);
+                    p._rapidTimer = setTimeout(() => {
+                        p.cdBoost = 1;
+                        p._rapidTimer = null;
+                    }, 10000);
                     activePowerupTimeouts.push(p._rapidTimer);
                 } else if (this.type === "speed") {
                     if (p._speedTimer) clearTimeout(p._speedTimer);
                     p.speedBoost = 1.5;
-                    p._speedTimer = setTimeout(() => { p.speedBoost = 1; p._speedTimer = null; }, 10000);
+                    p._speedTimer = setTimeout(() => {
+                        p.speedBoost = 1;
+                        p._speedTimer = null;
+                    }, 10000);
                     activePowerupTimeouts.push(p._speedTimer);
                 } else if (this.type === "rain") {
                     if (p._rainTimer) clearTimeout(p._rainTimer);
                     p.rainMode = true;
-                    p._rainTimer = setTimeout(() => { p.rainMode = false; p._rainTimer = null; }, 30000);
+                    p._rainTimer = setTimeout(() => {
+                        p.rainMode = false;
+                        p._rainTimer = null;
+                    }, 30000);
                     activePowerupTimeouts.push(p._rainTimer);
                 }
             }
-
         }
+
 
 
         // EFFECTS / SCORE
