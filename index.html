@@ -1508,34 +1508,23 @@
                             const dx = t.clientX - (rect.left + rect.width / 2);
                             const dy = t.clientY - (rect.top + rect.height / 2);
 
-                            // normaliza
-                            let vx = dx, vy = dy;
-                            const L = Math.hypot(vx, vy);
-                            if (L > 0) { vx /= L; vy /= L; }
-
                             keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
 
                             const threshold = 10;
-                            if (vy < -threshold) keys.add("w");
-                            if (vy > threshold) keys.add("s");
-                            if (vx < -threshold) keys.add("a");
-                            if (vx > threshold) keys.add("d");
+                            if (dy < -threshold) keys.add("w");
+                            if (dy > threshold) keys.add("s");
+                            if (dx < -threshold) keys.add("a");
+                            if (dx > threshold) keys.add("d");
 
-                            // 🔥 mover el stick visual
-                            joy.style.setProperty("--joyX", dx + "px");
-                            joy.style.setProperty("--joyY", dy + "px");
-
-                            joy.style.setProperty("transform",
-                                `translate(${dx / 3}px, ${dy / 3}px)`); // pequeño feedback visible
+                            // feedback visual
+                            joy.style.transform = `translate(${dx / 3}px, ${dy / 3}px)`;
                         }
                     }
                 };
 
                 const handleEnd = () => {
-                    keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
-                    joy.style.setProperty("--joyX", "0px");
-                    joy.style.setProperty("--joyY", "0px");
-                    joy.style.setProperty("transform", "translate(0,0)");
+                    ["w", "a", "s", "d"].forEach(k => keys.delete(k));
+                    joy.style.transform = "translate(0,0)";
                     activeTouch = null;
 
                     document.removeEventListener('touchmove', handleMove, { passive: false });
