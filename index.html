@@ -609,6 +609,7 @@
         // World
         const TILE = 32;
         let W = 0, H = 0; // << ahora son dinámicos
+        let joyLastDx = 0, joyLastDy = -1; // por defecto hacia arriba
         // Ajustar canvas al tamaño de pantalla
         // Ajustar canvas al tamaño de pantalla (iOS usa clientWidth/Height)
         function resizeCanvas() {
@@ -798,11 +799,33 @@
                 let s = this.speed * this.speedBoost * (this.dash > 0 ? 2.8 : 1);
                 let nx = this.x + vx * s, ny = this.y + vy * s;
                 const box = (x, y) => ({ x: x - this.w / 2, y: y - this.h / 2, w: this.w, h: this.h });
-                for (const sld of world.solids) { let bx = box(nx, this.y); if (AABB(bx.x, bx.y, bx.w, bx.h, sld.x, sld.y, sld.w, sld.h)) { if (nx > this.x) nx = sld.x - this.w / 2; else nx = sld.x + sld.w + this.w / 2; } let by = box(nx, ny); if (AABB(by.x, by.y, by.w, by.h, sld.x, sld.y, sld.w, sld.h)) { if (ny > this.y) ny = sld.y - this.h / 2; else ny = sld.y + sld.h + this.h / 2; } }
+                for (const sld of world.solids) {
+                    let bx = box(nx, this.y);
+                    if (AABB(bx.x, bx.y, bx.w, bx.h, sld.x, sld.y, sld.w, sld.h)) {
+                        if (nx > this.x) nx = sld.x - this.w / 2;
+                        else nx = sld.x + sld.w + this.w / 2;
+                    }
+                    let by = box(nx, ny);
+                    if (AABB(by.x, by.y, by.w, by.h, sld.x, sld.y, sld.w, sld.h)) {
+                        if (ny > this.y) ny = sld.y - this.h / 2;
+                        else ny = sld.y + sld.h + this.h / 2;
+                    }
+                }
                 this.x = nx; this.y = ny;
-                if (this.dash > 0) this.dash--; else if (!keys.has(' ')) this.canDash = true;
-                if (keys.has(' ') && this.canDash) { this.dash = 12; this.canDash = false; camera.shake = 8; sfx(220, .05, 'sawtooth', .05); }
+
+                if (this.dash > 0) this.dash--;
+                else if (!keys.has(' ')) this.canDash = true;
+
+                if (keys.has(' ') && this.canDash) {
+                    this.dash = 12;
+                    this.canDash = false;
+                    camera.shake = 8;
+                    sfx(220, .05, 'sawtooth', .05);
+                }
+
                 if (this.cd > 0) this.cd--;
+
+                // --- Disparo ---
                 if (mouse.down && this.cd <= 0) {
                     if (this.rainMode) {
                         // dispara en lluvia (como el boss fase 3)
@@ -811,17 +834,38 @@
                             world.bullets.push(new Bullet(this.x + offset, this.y, 0, 7, 'p'));
                         }
                     } else {
-                        const ang = Math.atan2(mouse.y - (this.y - camera.y), mouse.x - (this.x - camera.x));
-                        world.bullets.push(new Bullet(this.x, this.y, Math.cos(ang) * 7, Math.sin(ang) * 7, 'p'));
+                        let dirX, dirY;
+
+                        if (mouse.x && mouse.y) {
+                            // PC: disparo hacia el ratón
+                            dirX = mouse.x - (this.x - camera.x);
+                            dirY = mouse.y - (this.y - camera.y);
+                        } else {
+                            // Móvil: disparo hacia la dirección del joystick
+                            dirX = joyLastDx;
+                            dirY = joyLastDy;
+                        }
+
+                        const L = Math.hypot(dirX, dirY) || 1;
+                        dirX /= L; dirY /= L;
+
+                        world.bullets.push(new Bullet(this.x, this.y, dirX * 7, dirY * 7, 'p'));
                     }
+
                     this.cd = 10 * (this.cdBoost || 1);
                     sfx(780, .06, 'square', .03);
                     camera.shake = 2;
                 }
 
-                if (Math.hypot(this.x - world.goal.x, this.y - world.goal.y) < 16) { world.over = true; world.win = true; renderOverlay(); }
+                if (Math.hypot(this.x - world.goal.x, this.y - world.goal.y) < 16) {
+                    world.over = true;
+                    world.win = true;
+                    renderOverlay();
+                }
+
                 if (this.hurtCD > 0) this.hurtCD--;
             }
+
             draw() {
                 let sprite = heroSprites.down; // por defecto mirando abajo
 
@@ -1515,6 +1559,9 @@
                             if (dy > threshold) keys.add("s");
                             if (dx < -threshold) keys.add("a");
                             if (dx > threshold) keys.add("d");
+                            joyLastDx = dx;
+                            joyLastDy = dy;
+
 
                             // feedback visual
                             joy.style.transform = `translate(${dx / 3}px, ${dy / 3}px)`;
@@ -1522,19 +1569,21 @@
                     }
                 };
 
-                const handleEnd = () => {
-                    ["w", "a", "s", "d"].forEach(k => keys.delete(k));
-                    joy.style.transform = "translate(0,0)";
-                    activeTouch = null;
+                const handleEnd = (e) => {
+                    let stillActive = false;
+                    for (let t of e.touches) {
+                        if (t.identifier === activeTouch) stillActive = true;
+                    }
+                    if (!stillActive) {
+                        ["w", "a", "s", "d"].forEach(k => keys.delete(k));
+                        joy.style.transform = "translate(0,0)";
+                        activeTouch = null;
 
-                    document.removeEventListener('touchmove', handleMove, { passive: false });
-                    document.removeEventListener('touchend', handleEnd, { passive: false });
-                    document.removeEventListener('touchcancel', handleEnd, { passive: false });
+                        document.removeEventListener('touchmove', handleMove, { passive: false });
+                        document.removeEventListener('touchend', handleEnd, { passive: false });
+                        document.removeEventListener('touchcancel', handleEnd, { passive: false });
+                    }
                 };
-
-                document.addEventListener('touchmove', handleMove, { passive: false });
-                document.addEventListener('touchend', handleEnd, { passive: false });
-                document.addEventListener('touchcancel', handleEnd, { passive: false });
             }, { passive: false });
 
 
