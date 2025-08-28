@@ -373,7 +373,7 @@
         #touchControls {
             position: fixed;
             inset: 0;
-            pointer-events: auto;
+            pointer-events: none;
             z-index: 3000;
             /* ✅ más alto que el canvas */
         }
@@ -388,18 +388,14 @@
 
 
         #joystick {
-            position: absolute;
-            bottom: 50px;
-            left: 50px;
-            width: 120px;
-            height: 120px;
-            z-index: 3000;
-            border-radius: 50%;
             background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
             border: 2px solid #5a8dbd;
+            z-index: 4000;
             pointer-events: auto;
             touch-action: none;
         }
+
 
         #btnShoot,
         #btnDash {
