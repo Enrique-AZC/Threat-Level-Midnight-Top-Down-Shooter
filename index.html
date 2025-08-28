@@ -388,14 +388,18 @@
 
 
         #joystick {
+            position: absolute;
+            bottom: 50px;
+            left: 50px;
+            width: 120px;
+            height: 120px;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 50%;
             border: 2px solid #5a8dbd;
             z-index: 4000;
-            pointer-events: auto;
+            pointer-events: none;
             touch-action: none;
         }
-
 
         #btnShoot,
         #btnDash {
