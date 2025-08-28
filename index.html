@@ -1569,15 +1569,29 @@
                     }
                 };
 
-                const handleEnd = () => {
-                    ["w", "a", "s", "d"].forEach(k => keys.delete(k));
-                    joy.style.transform = "translate(0,0)";
-                    activeTouch = null;
+                const handleEnd = (e) => {
+                    // ¿sigue existiendo el dedo del joystick?
+                    let stillActive = false;
+                    for (let t of e.touches) {
+                        if (t.identifier === activeTouch) {
+                            stillActive = true;
+                            break;
+                        }
+                    }
 
-                    document.removeEventListener('touchmove', handleMove, { passive: false });
-                    document.removeEventListener('touchend', handleEnd, { passive: false });
-                    document.removeEventListener('touchcancel', handleEnd, { passive: false });
+                    // si ya no está el dedo del joystick -> limpiar
+                    if (!stillActive && activeTouch !== null) {
+                        ["w", "a", "s", "d"].forEach(k => keys.delete(k));
+                        joy.style.transform = "translate(0,0)";
+                        activeTouch = null;
+
+                        // 🔥 estos remove solo se ejecutan cuando se soltó el joystick
+                        document.removeEventListener('touchmove', handleMove, { passive: false });
+                        document.removeEventListener('touchend', handleEnd, { passive: false });
+                        document.removeEventListener('touchcancel', handleEnd, { passive: false });
+                    }
                 };
+
 
                 document.addEventListener('touchmove', handleMove, { passive: false });
                 document.addEventListener('touchend', handleEnd, { passive: false });
