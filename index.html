@@ -584,6 +584,9 @@
     <script>
         const $ = s => document.querySelector(s);
         const canvas = $('#game'); const ctx = canvas.getContext('2d');
+        // World
+        const TILE = 32;
+        let W = 0, H = 0; // << ahora son dinámicos
         // Ajustar canvas al tamaño de pantalla
         // Ajustar canvas al tamaño de pantalla (iOS usa clientWidth/Height)
         function resizeCanvas() {
@@ -641,9 +644,7 @@
         // Tuning
         const TUNING = { playerMaxHP: 100, enemyMaxHP: 40, bossMaxHP: 500, dmgFromEnemyBullet: 20, dmgFromContact: 25, dmgFromPlayerBullet: 25, iFramesPlayer: 24 };
 
-        // World
-        const TILE = 32;
-        let W = 0, H = 0; // << ahora son dinámicos
+        
 
         const camera = { x: 0, y: 0, shake: 0 };
         const keys = new Set(); const mouse = { x: 0, y: 0, down: false };
