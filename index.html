@@ -310,7 +310,7 @@
             place-items: center;
             z-index: 2000;
             pointer-events: none;
-            
+
         }
 
         /* --- Menú de pausa mejorado --- */
@@ -538,6 +538,45 @@
             justify-content: center;
             gap: 16px;
         }
+
+        #bossDialogue {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 20, 30, 0.9);
+            border: 2px solid #5a8dbd;
+            border-radius: 8px;
+            padding: 10px 16px;
+            color: #e8eefc;
+            font-size: 16px;
+            font-family: 'Russo One', sans-serif;
+            text-align: center;
+            max-width: 600px;
+            z-index: 5000;
+            animation: fadeInOut 3.5s ease forwards;
+        }
+
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -20px);
+            }
+
+            10% {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -20px);
+            }
+        }
     </style>
 </head>
 
@@ -590,6 +629,11 @@
             </div>
 
             <canvas id="game"></canvas>
+            <!-- Globo de diálogo de boss -->
+            <div id="bossDialogue" style="display:none;">
+                <span id="bossDialogueText"></span>
+            </div>
+
             <div id="overlay"></div>
             <div id="bossName"></div>
             <div id="bossBarWrap">
@@ -714,6 +758,46 @@
 
         // Colors
         const Colors = { wall: '#1b2330', trim: '#2a3547', floor: '#0f141c', enemy: '#ff6b9a', hero: '#7cc4ff', gold: '#ffd166', danger: '#ff5b5b', boss: '#ff0033' };
+
+
+
+        function showBossDialogue(line) {
+            const box = document.getElementById("bossDialogue");
+            const text = document.getElementById("bossDialogueText");
+            text.textContent = line;
+            box.style.display = "block";
+
+            // reinicia animación
+            box.style.animation = "none";
+            void box.offsetHeight; // hack para reiniciar
+            box.style.animation = "fadeInOut 3.5s ease forwards";
+
+            // ocultar al terminar
+            setTimeout(() => { box.style.display = "none"; }, 3500);
+        }
+
+        const tobyLines = {
+            intro: [
+                "Toby: Hola Michael… Sé que no querías verme aquí. Yo tampoco quería.",
+                "Toby: Recursos Humanos no suele entrar en combate… pero aquí estamos.",
+                "Toby: Este es solo… otro día en la oficina."
+            ],
+            phase2: [
+                "Toby: Esto técnicamente viola el manual de empleados… sección 4, párrafo 3.",
+                "Toby: No es nada personal, es… procedimiento.",
+                "Toby: A veces siento que lo único que hago es arruinarle la vida a la gente."
+            ],
+            phase3: [
+                "Toby: ¿Por qué siempre termino siendo el malo en tu historia, Michael?",
+                "Toby: Supongo que… esto es lo más emocionante que me ha pasado en Recursos Humanos.",
+                "Toby: No pensé que terminaría… persiguiéndote por un pasillo oscuro."
+            ],
+            death: [
+                "Toby: *suspiro*… Ojalá hubiera tomado esas vacaciones a Costa Rica.",
+                "Toby: Al final… solo quería que alguien me invitara a la fiesta."
+            ]
+        };
+
 
 
         // Sprites del jugador
@@ -1000,6 +1084,8 @@
                 this.maxHp = 1000; this.hp = this.maxHp; this.cd = 0; this.phase = 1; this.attackTimer = 0;
                 $('#bossName').textContent = 'TOBY';
                 $('#bossName').style.opacity = 1;
+                showBossDialogue(tobyLines.intro[Math.floor(Math.random() * tobyLines.intro.length)]);
+
             }
             damage(d) {
                 if (!this.alive) return;
@@ -1067,10 +1153,13 @@
                 // --- Cambios de fase ---
                 if (this.hp < this.maxHp * 0.66 && this.phase < 2) {
                     this.phase = 2;
+                    showBossDialogue(tobyLines.phase2[Math.floor(Math.random() * tobyLines.phase2.length)]);
                 }
                 if (this.hp < this.maxHp * 0.33 && this.phase < 3) {
                     this.phase = 3;
+                    showBossDialogue(tobyLines.phase3[Math.floor(Math.random() * tobyLines.phase3.length)]);
                 }
+
             }
 
             // Dispara proyectiles en dirección al jugador
@@ -1161,6 +1250,8 @@
                 renderOverlay();
                 $('#bossName').style.opacity = 0;
                 world.powerUps.push(new PowerUp(this.x, this.y, "rain"));
+                showBossDialogue(tobyLines.death[0]);
+
 
             }
         }
