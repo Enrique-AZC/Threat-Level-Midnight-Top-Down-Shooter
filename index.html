@@ -396,6 +396,14 @@
             /* ✅ los botones por encima */
         }
 
+        #touchControls,
+        #joystick,
+        #btnShoot,
+        #btnDash {
+            z-index: 9999 !important;
+        }
+
+
 
         #joystick {
             position: absolute;
@@ -644,7 +652,7 @@
         // Tuning
         const TUNING = { playerMaxHP: 100, enemyMaxHP: 40, bossMaxHP: 500, dmgFromEnemyBullet: 20, dmgFromContact: 25, dmgFromPlayerBullet: 25, iFramesPlayer: 24 };
 
-        
+
 
         const camera = { x: 0, y: 0, shake: 0 };
         const keys = new Set(); const mouse = { x: 0, y: 0, down: false };
@@ -1477,7 +1485,7 @@
             joy.addEventListener('touchstart', e => {
                 e.preventDefault();
                 joyActive = true;
-            },{ passive:false });
+            }, { passive: false });
             joy.addEventListener('touchmove', e => {
                 e.preventDefault();
                 const rect = joy.getBoundingClientRect();
@@ -1496,22 +1504,41 @@
                 if (vy > 20) keys.add("s");
                 if (vx < -20) keys.add("a");
                 if (vx > 20) keys.add("d");
-            },{ passive:false });
+            }, { passive: false });
             joy.addEventListener('touchend', e => {
                 e.preventDefault();
                 joyActive = false;
                 keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
-            },{ passive:false });
+            }, { passive: false });
 
             // --- Botón de disparo ---
             const btnShoot = $('#btnShoot');
-            btnShoot.addEventListener('touchstart', e => { e.preventDefault(); mouse.down = true; },{ passive:false });
-            btnShoot.addEventListener('touchend', e => { e.preventDefault(); mouse.down = false; },{ passive:false });
+            btnShoot.addEventListener('touchstart', e => { e.preventDefault(); mouse.down = true; }, { passive: false });
+            btnShoot.addEventListener('touchend', e => { e.preventDefault(); mouse.down = false; }, { passive: false });
 
             // --- Botón de dash ---
             const btnDash = $('#btnDash');
-            btnDash.addEventListener('touchstart', e => { e.preventDefault(); keys.add(" "); },{ passive:false });
-            btnDash.addEventListener('touchend', e => { e.preventDefault(); keys.delete(" "); },{ passive:false });
+            btnDash.addEventListener('touchstart', e => { e.preventDefault(); keys.add(" "); }, { passive: false });
+            btnDash.addEventListener('touchend', e => { e.preventDefault(); keys.delete(" "); }, { passive: false });
+
+            // Asegurar limpieza si se interrumpe el toque (multitouch, notificación, etc.)
+            ["touchend", "touchcancel"].forEach(evt => {
+                joy.addEventListener(evt, e => {
+                    e.preventDefault();
+                    keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
+                }, { passive: false });
+
+                btnShoot.addEventListener(evt, e => {
+                    e.preventDefault();
+                    mouse.down = false;
+                }, { passive: false });
+
+                btnDash.addEventListener(evt, e => {
+                    e.preventDefault();
+                    keys.delete(" ");
+                }, { passive: false });
+            });
+
         }
 
         window.addEventListener("resize", resizeCanvas);
