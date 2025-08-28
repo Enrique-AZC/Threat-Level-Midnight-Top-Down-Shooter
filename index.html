@@ -587,12 +587,20 @@
         // Ajustar canvas al tamaño de pantalla
         // Ajustar canvas al tamaño de pantalla (iOS usa clientWidth/Height)
         function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+            const rect = canvas.getBoundingClientRect(); // tamaño visible dentro de #stage
+            canvas.width = Math.round(rect.width * dpr);
+            canvas.height = Math.round(rect.height * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // evita escalados acumulados
+            W = rect.width;
+            H = rect.height;
         }
 
         window.addEventListener("resize", resizeCanvas);
+        window.addEventListener("orientationchange", () => setTimeout(resizeCanvas, 200));
         resizeCanvas();
+
+
 
 
         const overlay = $('#overlay');
@@ -634,13 +642,37 @@
         const TUNING = { playerMaxHP: 100, enemyMaxHP: 40, bossMaxHP: 500, dmgFromEnemyBullet: 20, dmgFromContact: 25, dmgFromPlayerBullet: 25, iFramesPlayer: 24 };
 
         // World
-        const TILE = 32, W = canvas.width, H = canvas.height;
+        const TILE = 32;
+        let W = 0, H = 0; // << ahora son dinámicos
+
         const camera = { x: 0, y: 0, shake: 0 };
         const keys = new Set(); const mouse = { x: 0, y: 0, down: false };
         window.addEventListener('keydown', e => { const k = e.key.toLowerCase(); keys.add(k); if (k === ' ') { e.preventDefault() } if (k === 'escape') togglePause(); if (k === 'r') resetGame(); });
         window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
         canvas.addEventListener('mousemove', e => { const r = canvas.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top });
         canvas.addEventListener('mousedown', () => mouse.down = true); window.addEventListener('mouseup', () => mouse.down = false);
+        // Soporte táctil para apuntar/disparar en el canvas
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const t = e.touches[0];
+            const r = canvas.getBoundingClientRect();
+            mouse.x = t.clientX - r.left;
+            mouse.y = t.clientY - r.top;
+            mouse.down = true;
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const t = e.touches[0];
+            const r = canvas.getBoundingClientRect();
+            mouse.x = t.clientX - r.left;
+            mouse.y = t.clientY - r.top;
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', () => {
+            mouse.down = false;
+        }, { passive: false });
+
 
         const world = {
             tiles: [], solids: [], doors: [], spawns: [], enemies: [], bullets: [], blood: [], particles: [], powerUps: [],
@@ -1444,7 +1476,7 @@
             joy.addEventListener('touchstart', e => {
                 e.preventDefault();
                 joyActive = true;
-            });
+            },{ passive:false });
             joy.addEventListener('touchmove', e => {
                 e.preventDefault();
                 const rect = joy.getBoundingClientRect();
@@ -1463,22 +1495,22 @@
                 if (vy > 20) keys.add("s");
                 if (vx < -20) keys.add("a");
                 if (vx > 20) keys.add("d");
-            });
+            },{ passive:false });
             joy.addEventListener('touchend', e => {
                 e.preventDefault();
                 joyActive = false;
                 keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
-            });
+            },{ passive:false });
 
             // --- Botón de disparo ---
             const btnShoot = $('#btnShoot');
-            btnShoot.addEventListener('touchstart', e => { e.preventDefault(); mouse.down = true; });
-            btnShoot.addEventListener('touchend', e => { e.preventDefault(); mouse.down = false; });
+            btnShoot.addEventListener('touchstart', e => { e.preventDefault(); mouse.down = true; },{ passive:false });
+            btnShoot.addEventListener('touchend', e => { e.preventDefault(); mouse.down = false; },{ passive:false });
 
             // --- Botón de dash ---
             const btnDash = $('#btnDash');
-            btnDash.addEventListener('touchstart', e => { e.preventDefault(); keys.add(" "); });
-            btnDash.addEventListener('touchend', e => { e.preventDefault(); keys.delete(" "); });
+            btnDash.addEventListener('touchstart', e => { e.preventDefault(); keys.add(" "); },{ passive:false });
+            btnDash.addEventListener('touchend', e => { e.preventDefault(); keys.delete(" "); },{ passive:false });
         }
 
         window.addEventListener("resize", resizeCanvas);
