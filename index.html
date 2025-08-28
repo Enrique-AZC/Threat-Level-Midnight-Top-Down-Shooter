@@ -1492,49 +1492,65 @@
         if (isMobile) {
             $('#touchControls').style.display = 'block';
 
-            // --- Joystick ---
             const joy = $('#joystick');
-            let joyActive = false, joyX = 0, joyY = 0;
+            let activeTouch = null;
 
             joy.addEventListener('touchstart', e => {
                 e.preventDefault();
-                joyActive = true;
+                if (!e.touches.length) return;
+
+                activeTouch = e.touches[0].identifier;
+
+                const handleMove = (e) => {
+                    for (let t of e.touches) {
+                        if (t.identifier === activeTouch) {
+                            const rect = joy.getBoundingClientRect();
+                            const dx = t.clientX - (rect.left + rect.width / 2);
+                            const dy = t.clientY - (rect.top + rect.height / 2);
+
+                            // normaliza
+                            let vx = dx, vy = dy;
+                            const L = Math.hypot(vx, vy);
+                            if (L > 0) { vx /= L; vy /= L; }
+
+                            keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
+
+                            const threshold = 10;
+                            if (vy < -threshold) keys.add("w");
+                            if (vy > threshold) keys.add("s");
+                            if (vx < -threshold) keys.add("a");
+                            if (vx > threshold) keys.add("d");
+
+                            // mover el stick visual
+                            joy.style.setProperty('--joyX', dx + 'px');
+                            joy.style.setProperty('--joyY', dy + 'px');
+                        }
+                    }
+                };
+
+                const handleEnd = (e) => {
+                    let stillActive = false;
+                    for (let t of e.touches) {
+                        if (t.identifier === activeTouch) stillActive = true;
+                    }
+                    if (!stillActive) {
+                        // limpiar controles
+                        keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
+                        joy.style.setProperty('--joyX', '0px');
+                        joy.style.setProperty('--joyY', '0px');
+                        activeTouch = null;
+
+                        document.removeEventListener('touchmove', handleMove, { passive: false });
+                        document.removeEventListener('touchend', handleEnd, { passive: false });
+                        document.removeEventListener('touchcancel', handleEnd, { passive: false });
+                    }
+                };
+
+                document.addEventListener('touchmove', handleMove, { passive: false });
+                document.addEventListener('touchend', handleEnd, { passive: false });
+                document.addEventListener('touchcancel', handleEnd, { passive: false });
             }, { passive: false });
-            joy.addEventListener('touchmove', e => {
-                e.preventDefault();
-                const rect = joy.getBoundingClientRect();
-                const t = e.touches[0];
-                const dx = t.clientX - (rect.left + rect.width / 2);
-                const dy = t.clientY - (rect.top + rect.height / 2);
 
-                // normaliza
-                let vx = dx;
-                let vy = dy;
-                const L = Math.hypot(vx, vy);
-                if (L > 0) { vx /= L; vy /= L; }
-
-                keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
-
-                // 👉 bajar el umbral a 10px para que responda mejor
-                const threshold = 10;
-                if (vy < -threshold) keys.add("w");
-                if (vy > threshold) keys.add("s");
-                if (vx < -threshold) keys.add("a");
-                if (vx > threshold) keys.add("d");
-                // actualizar el stick visual
-                joy.style.setProperty('--joyX', dx + 'px');
-                joy.style.setProperty('--joyY', dy + 'px');
-
-            }, { passive: false });
-
-            joy.addEventListener('touchend', e => {
-                e.preventDefault();
-                joyActive = false;
-                keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
-                joy.style.setProperty('--joyX', '0px');
-                joy.style.setProperty('--joyY', '0px');
-
-            }, { passive: false });
 
             // --- Botón de disparo ---
             const btnShoot = $('#btnShoot');
