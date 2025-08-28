@@ -798,6 +798,52 @@
             ]
         };
 
+        let bossMusic;
+        let bossMusicPlaying = false;
+
+        function playBossMusic() {
+            if (bossMusicPlaying) return; // no la reinicies si ya suena
+            bossMusic = new Audio("boss_theme.mp3");
+            bossMusic.loop = true;
+            bossMusic.volume = 0.6; // ajusta volumen
+            bossMusic.play().catch(e => console.warn("Autoplay bloqueado:", e));
+            bossMusicPlaying = true;
+        }
+
+        function stopBossMusic() {
+            if (bossMusic) {
+                bossMusic.pause();
+                bossMusic.currentTime = 0;
+                bossMusicPlaying = false;
+            }
+        }
+
+        let bgMusic;
+        let bgMusicPlaying = false;
+        let bgMusicPosition = 0; // aquí guardamos en qué segundo iba
+
+
+        function playBgMusic() {
+            if (bgMusicPlaying) return;
+            bgMusic = new Audio("office_dungeon_theme.mp3");
+            bgMusic.loop = true;
+            bgMusic.volume = 0.4;
+            bgMusic.currentTime = bgMusicPosition; // 👈 retomamos desde ahí
+            bgMusic.play().catch(e => console.warn("Autoplay bloqueado:", e));
+            bgMusicPlaying = true;
+        }
+
+
+        function stopBgMusic() {
+            if (bgMusic) {
+                bgMusicPosition = bgMusic.currentTime; // 👈 guardamos dónde se quedó
+                bgMusic.pause();
+                bgMusicPlaying = false;
+            }
+        }
+
+
+
 
 
         // Sprites del jugador
@@ -1085,6 +1131,10 @@
                 $('#bossName').textContent = 'TOBY';
                 $('#bossName').style.opacity = 1;
                 showBossDialogue(tobyLines.intro[Math.floor(Math.random() * tobyLines.intro.length)]);
+                showBossDialogue(tobyLines.intro[Math.floor(Math.random() * tobyLines.intro.length)]);
+                stopBgMusic()
+                playBossMusic();
+
 
             }
             damage(d) {
@@ -1251,6 +1301,10 @@
                 $('#bossName').style.opacity = 0;
                 world.powerUps.push(new PowerUp(this.x, this.y, "rain"));
                 showBossDialogue(tobyLines.death[0]);
+                showBossDialogue(tobyLines.death[Math.floor(Math.random() * tobyLines.death.length)]);
+                stopBossMusic();
+                playBgMusic();
+
 
 
             }
@@ -1398,6 +1452,9 @@
                 }
             }
             $('#hudScore').textContent = 'Puntuación: 0'; $('#hudCombo').textContent = 'Combo ×1.00'; updateHPUI(); $('#hudDifficulty').textContent = 'Dificultad: 0';
+            if (!bgMusicPlaying) {
+                playBgMusic();
+            }
         }
 
         // HUD
@@ -1434,6 +1491,10 @@
             $('#bossName').textContent = '';
             $('#bossName').style.opacity = 0;
             $('#bossBarWrap').style.display = 'none';
+            stopBossMusic();
+            stopBgMusic();
+            playBgMusic();
+
         }
 
 
@@ -1751,6 +1812,9 @@
         function startGame() {
             console.log("Start game ejecutado");
             buildLevel();
+            if (!bgMusicPlaying) {
+                playBgMusic();
+            }
             loop();
         }
 
