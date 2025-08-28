@@ -842,6 +842,9 @@
             }
         }
 
+        const ENEMY_KILL_HEAL = 5;
+
+
 
 
 
@@ -1113,12 +1116,24 @@
                 ctx.restore();
             }
             kill() {
-                if (!this.alive) return; this.alive = false; bloodBurst(this.x, this.y, Colors.enemy); camera.shake = 10; sfx(180, .16, 'square', .04); scoreKillFinal(); if (Math.random() < 0.1) { // 10% prob
+                if (!this.alive) return;
+                this.alive = false;
+                bloodBurst(this.x, this.y, Colors.enemy);
+                camera.shake = 10;
+                sfx(180, .16, 'square', .04);
+                scoreKillFinal();
+
+                // 💊 curación SIEMPRE al matar
+                player.hp = Math.min(player.maxHp, player.hp + ENEMY_KILL_HEAL);
+
+                // 10% probabilidad de soltar power-up
+                if (Math.random() < 0.1) {
                     const types = ["heal", "rapid", "speed"];
                     const t = types[(Math.random() * types.length) | 0];
                     world.powerUps.push(new PowerUp(this.x, this.y, t));
                 }
             }
+
         }
 
 
