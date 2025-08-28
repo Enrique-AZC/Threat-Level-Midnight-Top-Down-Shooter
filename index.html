@@ -422,6 +422,20 @@
             touch-action: none;
         }
 
+        #joystick::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(90, 141, 189, 0.6);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+
         #btnShoot,
         #btnDash {
             position: absolute;
@@ -1492,23 +1506,34 @@
                 const t = e.touches[0];
                 const dx = t.clientX - (rect.left + rect.width / 2);
                 const dy = t.clientY - (rect.top + rect.height / 2);
-                joyX = dx; joyY = dy;
 
                 // normaliza
-                let vx = dx, vy = dy;
+                let vx = dx;
+                let vy = dy;
                 const L = Math.hypot(vx, vy);
                 if (L > 0) { vx /= L; vy /= L; }
 
                 keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
-                if (vy < -20) keys.add("w");
-                if (vy > 20) keys.add("s");
-                if (vx < -20) keys.add("a");
-                if (vx > 20) keys.add("d");
+
+                // 👉 bajar el umbral a 10px para que responda mejor
+                const threshold = 10;
+                if (vy < -threshold) keys.add("w");
+                if (vy > threshold) keys.add("s");
+                if (vx < -threshold) keys.add("a");
+                if (vx > threshold) keys.add("d");
+                // actualizar el stick visual
+                joy.style.setProperty('--joyX', dx + 'px');
+                joy.style.setProperty('--joyY', dy + 'px');
+
             }, { passive: false });
+
             joy.addEventListener('touchend', e => {
                 e.preventDefault();
                 joyActive = false;
                 keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
+                joy.style.setProperty('--joyX', '0px');
+                joy.style.setProperty('--joyY', '0px');
+
             }, { passive: false });
 
             // --- Botón de disparo ---
