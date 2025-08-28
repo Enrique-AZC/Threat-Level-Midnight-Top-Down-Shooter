@@ -393,19 +393,20 @@
             left: 50px;
             width: 120px;
             height: 120px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 50%;
-            border: 2px solid #5a8dbd;
             z-index: 4000;
-            pointer-events: none;
+            /* encima del canvas */
+            border-radius: 50%;
+            background: transparent;
+            /* 👈 nada de rectángulo */
+            border: 2px solid #5a8dbd;
+            /* círculo visible */
+            pointer-events: auto;
             touch-action: none;
         }
 
         #btnShoot,
         #btnDash {
             position: absolute;
-            bottom: 100px;
-            right: 40px;
             width: 70px;
             height: 70px;
             border-radius: 50%;
@@ -415,7 +416,9 @@
             color: white;
             pointer-events: auto;
             touch-action: none;
+            z-index: 4000;
         }
+
 
         #btnDash {
             bottom: 200px;
