@@ -1164,7 +1164,25 @@
             constructor(x, y, vx, vy, from) { this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.from = from; this.life = 70; }
             update() {
                 this.x += this.vx; this.y += this.vy; this.life--; if (this.life <= 0) this.dead = true;
-                for (const s of world.solids) { if (AABB(this.x - 2, this.y - 2, 4, 4, s.x, s.y, s.w, s.h)) { this.dead = true; pop(this.x, this.y); } }
+                for (const s of world.solids) {
+                    if (AABB(this.x - 2, this.y - 2, 4, 4, s.x, s.y, s.w, s.h)) {
+                        if (this.from === 'p') {
+                            // 🔥 Rebotan solo las del jugador
+                            if (this.x < s.x || this.x > s.x + s.w) this.vx *= -1;
+                            if (this.y < s.y || this.y > s.y + s.h) this.vy *= -1;
+
+                            // un poquito de pérdida de velocidad para que no queden infinitas
+                            this.vx *= 0.9;
+                            this.vy *= 0.9;
+
+                        } else {
+                            // 👾 Las de los enemigos siguen muriendo al chocar
+                            this.dead = true;
+                            pop(this.x, this.y);
+                        }
+                    }
+                }
+
                 if (this.dead) return;
                 if (this.from === 'p') { for (const e of world.enemies) { if (e.alive && Math.hypot(this.x - e.x, this.y - e.y) < 12) { e.damage(TUNING.dmgFromPlayerBullet); this.dead = true; scoreKillPartial(e); break; } } }
                 else { if (world.player.alive && Math.hypot(this.x - world.player.x, this.y - world.player.y) < 12) { world.player.damage(TUNING.dmgFromEnemyBullet); this.dead = true; } }
