@@ -10,7 +10,1505 @@
   --floor:#0f141c; --acc:#5eead4; --enemy:#ff6b9a; --hero:#7cc4ff;
   --gold:#ffd166; --danger:#ff5b5b; --boss:#ff0033;
 }
-html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto;}
+html,body{height:100%;margin<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Threat Level Midnight — Top-Down</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --ink: #e0e0e0;
+            --wall: #1a1f29;
+            --trim: #2d3748;
+            --floor: #0f141a;
+            --acc: #4ade80;
+            /* verde suave para acentos */
+            --enemy: #ef4444;
+            /* rojo más apagado */
+            --hero: #60a5fa;
+            /* azul pastel */
+            --gold: #facc15;
+            --danger: #dc2626;
+            --boss: #b91c1c;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Russo+One&display=swap');
+
+        body {
+            font-family: 'Russo One', sans-serif;
+            background: #0e0e12;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* --- HUD --- */
+        .hud {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 12px;
+        }
+
+        /* --- HUD superior global --- */
+        #hudTop {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 999;
+        }
+
+        /* --- Título del juego --- */
+        /* --- Título discreto --- */
+        #gameTitle {
+            font-size: 20px;
+            color: var(--ink);
+            text-transform: none;
+            letter-spacing: 0.5px;
+            padding: 4px 10px;
+            border: 1px solid var(--trim);
+            border-radius: 6px;
+            background: rgba(15, 20, 26, 0.85);
+            box-shadow: none;
+        }
+
+        /* --- Contenedor de stats (derecha del título) --- */
+        #hudStats {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* --- HUD lateral derecho --- */
+        #hudRight {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 1000;
+        }
+
+        /* --- Bloques compactos de stats --- */
+        .hudBox {
+            padding: 8px 10px;
+            border-radius: 6px;
+            background: rgba(20, 24, 32, 0.9);
+            border: 1px solid var(--trim);
+            box-shadow: none;
+            font-size: 13px;
+            color: var(--ink);
+        }
+
+        /* Iconos de cada stat */
+        .hudIcon {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            color: #9ca3af;
+            /* gris neutro */
+        }
+
+
+        /* Barra de HP dentro de hudBox */
+        .hudHPBar {
+            flex: 1;
+            height: 8px;
+            background: #1f2937;
+            border-radius: 999px;
+            border: 1px solid #2d3748;
+        }
+
+        .hudHPFill {
+            background: var(--acc);
+        }
+
+
+        /* --- Chips de estadística --- */
+        .hudChip {
+            font-family: 'Russo One', sans-serif;
+            font-size: 13px;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(20, 24, 35, 0.85);
+            border: 1px solid #2a3547;
+            white-space: nowrap;
+        }
+
+        /* --- Barra de HP --- */
+        #hpWrap {
+            width: 140px;
+            height: 16px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #ff0088;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        #hpFill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff005d, #ff66b2);
+            width: 100%;
+            transition: width 0.3s ease;
+        }
+
+
+        .pill {
+            border: 2px solid #5a8dbd;
+            background: #1a1a25;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        /* --- HP Bar --- */
+        .hpWrap {
+            background: #222;
+            border: 2px solid #00bfff;
+            border-radius: 6px;
+            width: 120px;
+            height: 16px;
+            overflow: hidden;
+        }
+
+        .hpFill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0088, #00bfff);
+        }
+
+        /* --- Botones --- */
+        .buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 14px;
+        }
+
+        .btn {
+            background: #1a1d24;
+            color: var(--ink);
+            border: 1px solid var(--trim);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--trim);
+            color: #fff;
+        }
+
+        .btn:active {
+            background: #374151;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto;
+        }
+
+        #wrap {
+            position: fixed;
+            inset: 0;
+            display: grid;
+            grid-template-rows: auto 1fr auto
+        }
+
+        /* Contenedor del título */
+        #gameTitle {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Russo One', sans-serif;
+            font-size: 24px;
+            color: #5a8dbd;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 6px 16px;
+            border: 2px solid #5a8dbd;
+            border-radius: 8px;
+            background: rgba(14, 18, 28, 0.85);
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+        }
+
+
+        header,
+        footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            /* permite salto de línea ordenado */
+            gap: 6px;
+            /* espacio entre elementos */
+        }
+
+        footer {
+            border-top: 1px solid #1f2633;
+            border-bottom: none;
+            background: linear-gradient(0deg, #111723, #0b0e13)
+        }
+
+        .pill {
+            border: 1px solid #2a3547;
+            background: #0e131b;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            opacity: .95;
+            margin-right: 6px
+        }
+
+        #stage {
+            position: relative;
+            display: grid;
+            place-items: center;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        canvas {
+            background: var(--floor);
+            border-radius: 16px;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, .45), inset 0 0 0 1px rgba(255, 255, 255, .05);
+
+            /* 🔽 Responsivo pero solo dentro del #stage */
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+
+
+        #overlay {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            pointer-events: none
+        }
+
+        /* --- Menú de pausa mejorado --- */
+        .panel {
+            background: rgba(14, 18, 28, 0.96);
+            border: 2px solid #2a3547;
+            border-radius: 16px;
+            padding: 32px 24px;
+            width: min(460px, 92vw);
+            text-align: center;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.65);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .title {
+            margin: 0 0 16px;
+            font-size: 32px;
+            color: #5a8dbd;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .panel p {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            opacity: 0.85;
+        }
+
+        .panel .btn {
+            min-width: 160px;
+            font-size: 15px;
+        }
+
+        .panel .btn+.btn {
+            margin-left: 12px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 120px;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Russo One', sans-serif;
+            border: 2px solid #5a8dbd;
+            background: #181a24;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #276fb3;
+            color: #0e0e12;
+            transform: translateY(-2px);
+        }
+
+        #touchControls {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            /* solo los botones internos capturan eventos */
+            z-index: 2000;
+            /* 🔽 asegura que van encima del canvas */
+        }
+
+        #joystick,
+        #btnShoot,
+        #btnDash {
+            pointer-events: auto;
+            /* botones siguen siendo clicables */
+        }
+
+
+        #joystick {
+            position: absolute;
+            bottom: 80px;
+            left: 40px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #5a8dbd;
+            pointer-events: auto;
+            touch-action: none;
+        }
+
+        #btnShoot,
+        #btnDash {
+            position: absolute;
+            bottom: 100px;
+            right: 40px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(20, 24, 32, 0.9);
+            border: 2px solid #5a8dbd;
+            font-size: 24px;
+            color: white;
+            pointer-events: auto;
+            touch-action: none;
+        }
+
+        #btnDash {
+            bottom: 200px;
+            right: 60px;
+        }
+
+
+        .btn:active {
+            transform: translateY(0);
+            background: #1165b4;
+            border-color: #5a8dbd;
+        }
+
+        .hudHP {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .hpWrap {
+            width: 160px;
+            height: 10px;
+            background: #0e131b;
+            border: 1px solid var(--trim);
+            border-radius: 999px;
+            overflow: hidden
+        }
+
+        .hpFill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--acc), #22c55e);
+            width: 100%;
+            transition: width .15s
+        }
+
+        .hpLow .hpFill {
+            background: linear-gradient(90deg, #f59e0b, #ef4444)
+        }
+
+        #bossBarWrap {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%;
+            height: 22px;
+            background: #111;
+            border: 2px solid var(--boss);
+            border-radius: 6px;
+            overflow: hidden;
+            display: none;
+        }
+
+        #bossBarFill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--boss), #660000);
+        }
+
+        #bossName {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+            color: var(--boss);
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+        }
+
+        footer {
+            border-top: 1px solid #1f2633;
+            background: linear-gradient(0deg, #111723, #0b0e13);
+            padding: 12px 0;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="wrap">
+        <div id="stage">
+            <!-- HUD lateral derecho -->
+            <div id="hudRight">
+                <div class="hudBox" id="hudHP">
+                    <svg class="hudIcon" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 21C12 21 4 13.5 4 8.5C4 6 6 4 8.5 4C10 4 11.5 5 12 6.09C12.5 5 14 4 15.5 4C18 4 20 6 20 8.5C20 13.5 12 21 12 21Z" />
+                    </svg>
+                    <div class="hudHPBar">
+                        <div class="hudHPFill" id="hpFill"></div>
+                    </div>
+                    <b id="hpLabel">100/100</b>
+                </div>
+
+                <div class="hudBox">
+                    <svg class="hudIcon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L14.9 8.6L22 9.3L17 14.1L18.2 21.1L12 17.8L5.8 21.1L7 14.1L2 9.3L9.1 8.6L12 2Z" />
+                    </svg>
+                    <span id="hudScore">Puntuación: 0</span>
+                </div>
+
+
+                <div class="hudBox">
+                    <svg class="hudIcon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" />
+                    </svg>
+                    <span id="hudCombo">Combo ×1.0</span>
+                </div>
+
+                <div class="hudBox">
+                    <svg class="hudIcon" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 20C7.03 20 3 15.97 3 11C3 6.03 7.03 2 12 2C16.97 2 21 6.03 21 11C21 15.97 16.97 20 12 20ZM12.5 7H11V12L15.25 14.52L16 13.27L12.5 11.25V7Z" />
+                    </svg>
+                    <span id="hudTime">00:00</span>
+                </div>
+
+                <div class="hudBox">
+                    <svg class="hudIcon" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                    </svg>
+                    <span id="hudDifficulty">Dificultad: 0</span>
+                </div>
+            </div>
+
+            <canvas id="game"></canvas>
+            <div id="overlay"></div>
+            <div id="bossName"></div>
+            <div id="bossBarWrap">
+                <div id="bossBarFill"></div>
+            </div>
+        </div>
+
+        <footer>
+            <button class="btn" id="btnReset">Reiniciar</button>
+            <button class="btn" id="btnPause">Pausa</button>
+        </footer>
+
+        <div id="touchControls" style="display:none;">
+            <div id="joystick"></div>
+            <button id="btnShoot">🔥</button>
+            <button id="btnDash">⚡</button>
+        </div>
+
+    </div>
+
+
+    <script>
+        const $ = s => document.querySelector(s);
+        const canvas = $('#game'); const ctx = canvas.getContext('2d');
+        // Ajustar canvas al tamaño de pantalla
+        // Ajustar canvas al tamaño de pantalla (iOS usa clientWidth/Height)
+        function resizeCanvas() {
+            canvas.width = document.documentElement.clientWidth;
+            canvas.height = document.documentElement.clientHeight;
+        }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        const overlay = $('#overlay');
+        const TAU = Math.PI * 2; const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const lerp = (a, b, t) => a + (b - a) * t; const rnd = (a, b) => a + Math.random() * (b - a);
+
+        // Audio
+        // Audio (iOS necesita interacción del usuario)
+        let AC;
+        try {
+            AC = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.warn("AudioContext no disponible al inicio");
+        }
+
+        function sfx(f = 440, d = .07, t = 'square', g = .03) {
+            if (!AC) return; // si no hay audio, no rompe
+            const o = AC.createOscillator(), ga = AC.createGain();
+            o.type = t;
+            o.frequency.value = f;
+            ga.gain.value = g;
+            o.connect(ga);
+            ga.connect(AC.destination);
+            o.start();
+            ga.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + d);
+            o.stop(AC.currentTime + d);
+        }
+
+        // Reanudar AudioContext en iPhone al primer toque
+        document.addEventListener('touchstart', () => {
+            if (AC && AC.state === 'suspended') {
+                AC.resume();
+            }
+        }, { once: true });
+
+
+
+        // Tuning
+        const TUNING = { playerMaxHP: 100, enemyMaxHP: 40, bossMaxHP: 500, dmgFromEnemyBullet: 20, dmgFromContact: 25, dmgFromPlayerBullet: 25, iFramesPlayer: 24 };
+
+        // World
+        const TILE = 32, W = canvas.width, H = canvas.height;
+        const camera = { x: 0, y: 0, shake: 0 };
+        const keys = new Set(); const mouse = { x: 0, y: 0, down: false };
+        window.addEventListener('keydown', e => { const k = e.key.toLowerCase(); keys.add(k); if (k === ' ') { e.preventDefault() } if (k === 'escape') togglePause(); if (k === 'r') resetGame(); });
+        window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
+        canvas.addEventListener('mousemove', e => { const r = canvas.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top });
+        canvas.addEventListener('mousedown', () => mouse.down = true); window.addEventListener('mouseup', () => mouse.down = false);
+
+        const world = {
+            tiles: [], solids: [], doors: [], spawns: [], enemies: [], bullets: [], blood: [], particles: [], powerUps: [],
+            player: null, goal: { x: 0, y: 0, active: false }, paused: false, over: false, win: false, time: 0, score: 0, combo: 1, comboDecay: 0,
+            difficulty: 0, nextSpawn: 0, boss: null, lastBoss: 0
+        };
+
+        // Colors
+        const Colors = { wall: '#1b2330', trim: '#2a3547', floor: '#0f141c', enemy: '#ff6b9a', hero: '#7cc4ff', gold: '#ffd166', danger: '#ff5b5b', boss: '#ff0033' };
+
+
+        // Sprites del jugador
+        const heroSprites = {
+            up: new Image(),
+            down: new Image(),
+            left: new Image(),
+            right: new Image(),
+            up_left: new Image(),
+            up_right: new Image(),
+            down_left: new Image(),
+            down_right: new Image()
+        };
+
+        // Rutas a las imágenes
+        heroSprites.up.src = "./tra.png";
+        heroSprites.down.src = "./del.png";
+        heroSprites.left.src = "./izqs.png";
+        heroSprites.right.src = "./der.png";
+        heroSprites.up_left.src = "./revizq.png";
+        heroSprites.up_right.src = "./rev.png";
+        heroSprites.down_left.src = "./izqs.png";
+        heroSprites.down_right.src = "./der.png";
+
+
+        // Sprites de enemigos
+        const enemySprites = {
+            up: new Image(),
+            down: new Image(),
+            left: new Image(),
+            right: new Image(),
+            up_left: new Image(),
+            up_right: new Image(),
+            down_left: new Image(),
+            down_right: new Image()
+        };
+
+        enemySprites.up.src = "./dTra.png";
+        enemySprites.down.src = "./dDel.png";
+        enemySprites.left.src = "./dI.png";
+        enemySprites.right.src = "./dD.png";
+        enemySprites.up_left.src = "./dRI.png";
+        enemySprites.up_right.src = "./dRev.png";
+        enemySprites.down_left.src = "./dI.png";
+        enemySprites.down_right.src = "./dD.png";
+
+        // Sprites del boss
+        const bossSprites = {
+            up: new Image(),
+            down: new Image(),
+            left: new Image(),
+            right: new Image(),
+            up_left: new Image(),
+            up_right: new Image(),
+            down_left: new Image(),
+            down_right: new Image()
+        };
+
+        bossSprites.up.src = "./tTra.png";
+        bossSprites.down.src = "./tDel.png";
+        bossSprites.left.src = "./tI.png";
+        bossSprites.right.src = "./tD.png";
+        bossSprites.up_left.src = "./tRI.png";
+        bossSprites.up_right.src = "./tRev.png";
+        bossSprites.down_left.src = "./tI.png";
+        bossSprites.down_right.src = "./tD.png";
+
+        const activePowerupTimeouts = [];
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+
+
+
+        // Utils
+        function AABB(ax, ay, aw, ah, bx, by, bw, bh) { return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by }
+
+        // Player
+        class Player {
+            constructor(x, y) {
+                this.x = x; this.y = y; this.w = 18; this.h = 18; this.alive = true; this.cd = 0; this.speed = 2.6; this.dash = 0; this.canDash = true; this.maxHp = TUNING.playerMaxHP; this.hp = this.maxHp; this.hurtCD = 0; this.cdBoost = 1;
+                this.speedBoost = 1;
+                this.rainMode = false;
+            }
+            damage(d) { if (!this.alive || this.hurtCD > 0) return; this.hp = clamp(this.hp - d, 0, this.maxHp); this.hurtCD = TUNING.iFramesPlayer; camera.shake = 12; sfx(160, .08, 'triangle', .04); updateHPUI(); if (this.hp <= 0) this.kill(); }
+            heal(d) { this.hp = clamp(this.hp + d, 0, this.maxHp); updateHPUI(); }
+            update() {
+                if (!this.alive) return;
+                let vx = (keys.has('d') ? 1 : 0) - (keys.has('a') ? 1 : 0);
+                let vy = (keys.has('s') ? 1 : 0) - (keys.has('w') ? 1 : 0);
+                let L = Math.hypot(vx, vy) || 1; vx /= L; vy /= L;
+                let s = this.speed * this.speedBoost * (this.dash > 0 ? 2.8 : 1);
+                let nx = this.x + vx * s, ny = this.y + vy * s;
+                const box = (x, y) => ({ x: x - this.w / 2, y: y - this.h / 2, w: this.w, h: this.h });
+                for (const sld of world.solids) { let bx = box(nx, this.y); if (AABB(bx.x, bx.y, bx.w, bx.h, sld.x, sld.y, sld.w, sld.h)) { if (nx > this.x) nx = sld.x - this.w / 2; else nx = sld.x + sld.w + this.w / 2; } let by = box(nx, ny); if (AABB(by.x, by.y, by.w, by.h, sld.x, sld.y, sld.w, sld.h)) { if (ny > this.y) ny = sld.y - this.h / 2; else ny = sld.y + sld.h + this.h / 2; } }
+                this.x = nx; this.y = ny;
+                if (this.dash > 0) this.dash--; else if (!keys.has(' ')) this.canDash = true;
+                if (keys.has(' ') && this.canDash) { this.dash = 12; this.canDash = false; camera.shake = 8; sfx(220, .05, 'sawtooth', .05); }
+                if (this.cd > 0) this.cd--;
+                if (mouse.down && this.cd <= 0) {
+                    if (this.rainMode) {
+                        // dispara en lluvia (como el boss fase 3)
+                        for (let i = 0; i < 5; i++) {
+                            let offset = (Math.random() - 0.5) * 200;
+                            world.bullets.push(new Bullet(this.x + offset, this.y, 0, 7, 'p'));
+                        }
+                    } else {
+                        const ang = Math.atan2(mouse.y - (this.y - camera.y), mouse.x - (this.x - camera.x));
+                        world.bullets.push(new Bullet(this.x, this.y, Math.cos(ang) * 7, Math.sin(ang) * 7, 'p'));
+                    }
+                    this.cd = 10 * (this.cdBoost || 1);
+                    sfx(780, .06, 'square', .03);
+                    camera.shake = 2;
+                }
+
+                if (Math.hypot(this.x - world.goal.x, this.y - world.goal.y) < 16) { world.over = true; world.win = true; renderOverlay(); }
+                if (this.hurtCD > 0) this.hurtCD--;
+            }
+            draw() {
+                let sprite = heroSprites.down; // por defecto mirando abajo
+
+                // Detecta dirección según teclas presionadas
+                const up = keys.has("w");
+                const down = keys.has("s");
+                const left = keys.has("a");
+                const right = keys.has("d");
+
+                if (up && left) sprite = heroSprites.up_left;
+                else if (up && right) sprite = heroSprites.up_right;
+                else if (down && left) sprite = heroSprites.down_left;
+                else if (down && right) sprite = heroSprites.down_right;
+                else if (up) sprite = heroSprites.up;
+                else if (down) sprite = heroSprites.down;
+                else if (left) sprite = heroSprites.left;
+                else if (right) sprite = heroSprites.right;
+
+                ctx.save();
+                ctx.translate(this.x - camera.x, this.y - camera.y);
+                ctx.globalAlpha = this.hurtCD > 0 ? 0.7 : 1;
+
+                // Dibuja el sprite centrado en el jugador
+                ctx.drawImage(sprite, -this.w, -this.h, this.w * 2, this.h * 2);
+
+                // Escala 30% más grande
+                const scale = 1.3;
+                ctx.drawImage(
+                    sprite,
+                    -this.w * scale,
+                    -this.h * scale,
+                    this.w * 2 * scale,
+                    this.h * 2 * scale
+                );
+
+                ctx.restore();
+            }
+
+            kill() { if (!this.alive) return; this.alive = false; world.over = true; camera.shake = 16; sfx(140, .2, 'triangle', .05); bloodBurst(this.x, this.y, Colors.hero); renderOverlay(); }
+        }
+
+        // Enemy
+        class Enemy {
+            constructor(x, y) { this.x = x; this.y = y; this.w = 18; this.h = 18; this.alive = true; this.speed = 1.9; this.state = 'patrol'; this.cd = (rnd(0, 30) | 0); this.dir = rnd(0, TAU); this.seeTime = 0; this.burst = 0; this.maxHp = TUNING.enemyMaxHP; this.hp = this.maxHp; this.hurtCD = 0; }
+            damage(d) { if (!this.alive || this.hurtCD > 0) return; this.hp = clamp(this.hp - d, 0, this.maxHp); this.hurtCD = 10; camera.shake = 6; sfx(300, .06, 'square', .03); if (this.hp <= 0) this.kill(); }
+            update() {
+                if (!this.alive) return;
+                const p = world.player;
+                const canSee = Math.hypot(this.x - p.x, this.y - p.y) < 240; if (canSee) { this.state = 'chase'; this.seeTime = 24; } else if (this.seeTime > 0) { this.seeTime--; } else { this.state = 'patrol'; }
+                if (this.state === 'chase') {
+                    const ang = Math.atan2(p.y - this.y, p.x - this.x);
+                    this.x += Math.cos(ang) * this.speed; this.y += Math.sin(ang) * this.speed;
+                    if (this.cd <= 0) { this.burst = 2 + Math.random() < 0.35 ? 2 : 0; this.cd = Math.max(2, 12 - Math.floor(world.difficulty / 10)); }
+                    if (this.burst > 0 && this.cd <= 6) { const spread = 0.2; const a = ang + (Math.random() * spread - spread / 2); world.bullets.push(new Bullet(this.x, this.y, Math.cos(a) * 6, Math.sin(a) * 6, 'e')); sfx(520, .04, 'triangle', .02); this.burst--; }
+                } else { this.x += Math.cos(this.dir) * 0.6; this.y += Math.sin(this.dir) * 0.6; if (this.cd <= 0) { this.dir = rnd(0, TAU); this.cd = 40 + (rnd(0, 40) | 0); } }
+                if (this.cd > 0) this.cd--;
+                for (const s of world.solids) { if (AABB(this.x - 9, this.y - 9, 18, 18, s.x, s.y, s.w, s.h)) { if (this.x < s.x) this.x = s.x - 9; if (this.x > s.x + s.w) this.x = s.x + s.w + 9; if (this.y < s.y) this.y = s.y - 9; if (this.y > s.y + s.h) this.y = s.y + s.h + 9; } }
+                if (p.alive && Math.hypot(this.x - p.x, this.y - p.y) < 14) p.damage(TUNING.dmgFromContact);
+                if (this.hurtCD > 0) this.hurtCD--;
+
+                // Guarda la última dirección de movimiento
+                this.vx = (this.x - (this.lastX ?? this.x));
+                this.vy = (this.y - (this.lastY ?? this.y));
+                this.lastX = this.x;
+                this.lastY = this.y;
+
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x - camera.x, this.y - camera.y);
+
+                // sombra
+                ctx.globalAlpha = .25;
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.ellipse(0, 10, 12, 6, 0, 0, TAU);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                if (this.hurtCD > 0) ctx.globalAlpha = .75;
+
+                // Selección del sprite según dirección
+                let sprite = enemySprites.down; // por defecto
+                if (Math.abs(this.vx) > Math.abs(this.vy)) {
+                    if (this.vx > 0) sprite = enemySprites.right;
+                    else if (this.vx < 0) sprite = enemySprites.left;
+                } else {
+                    if (this.vy > 0) sprite = enemySprites.down;
+                    else if (this.vy < 0) sprite = enemySprites.up;
+                }
+                // diagonales
+                if (this.vx > 0 && this.vy < 0) sprite = enemySprites.up_right;
+                if (this.vx < 0 && this.vy < 0) sprite = enemySprites.up_left;
+                if (this.vx > 0 && this.vy > 0) sprite = enemySprites.down_right;
+                if (this.vx < 0 && this.vy > 0) sprite = enemySprites.down_left;
+
+                // dibuja 30% más grande
+                const scale = 1.3;
+                ctx.drawImage(
+                    sprite,
+                    -this.w * scale,
+                    -this.h * scale,
+                    this.w * 2 * scale,
+                    this.h * 2 * scale
+                );
+
+                ctx.restore();
+            }
+            kill() {
+                if (!this.alive) return; this.alive = false; bloodBurst(this.x, this.y, Colors.enemy); camera.shake = 10; sfx(180, .16, 'square', .04); scoreKillFinal(); if (Math.random() < 0.1) { // 10% prob
+                    const types = ["heal", "rapid", "speed"];
+                    const t = types[(Math.random() * types.length) | 0];
+                    world.powerUps.push(new PowerUp(this.x, this.y, t));
+                }
+            }
+        }
+
+
+
+        // ===== BOSS =====
+        class Boss {
+            constructor(x, y) {
+                this.x = x; this.y = y; this.w = 18; this.h = 18; this.alive = true;
+                this.maxHp = 1000; this.hp = this.maxHp; this.cd = 0; this.phase = 1; this.attackTimer = 0;
+                $('#bossName').textContent = 'TOBY';
+                $('#bossName').style.opacity = 1;
+            }
+            damage(d) {
+                if (!this.alive) return;
+                this.hp = clamp(this.hp - d, 0, this.maxHp);
+                camera.shake = 15; sfx(120, .1, 'triangle', .05);
+                if (this.hp <= 0) this.kill();
+            }
+            update() {
+                if (!this.alive) return;
+
+                // --- Movimiento hacia el jugador ---
+                let dx = world.player.x - this.x;
+                let dy = world.player.y - this.y;
+                let dist = Math.hypot(dx, dy);
+
+                if (dist > 0) {
+                    dx /= dist; dy /= dist;
+                    let speed = 1.0;
+                    if (this.phase === 2) speed = 1.5;
+                    if (this.phase === 3) speed = 2.0;
+
+                    let nx = this.x + dx * speed;
+                    let ny = this.y + dy * speed;
+
+                    // Separar colisión eje X
+                    const box = (x, y) => ({ x: x - this.w / 2, y: y - this.h / 2, w: this.w, h: this.h });
+                    let bx = box(nx, this.y);
+                    let blockedX = false;
+                    for (const s of world.solids) {
+                        if (AABB(bx.x, bx.y, bx.w, bx.h, s.x, s.y, s.w, s.h)) { blockedX = true; break; }
+                    }
+                    if (!blockedX) this.x = nx;
+
+                    // Separar colisión eje Y
+                    let by = box(this.x, ny);
+                    let blockedY = false;
+                    for (const s of world.solids) {
+                        if (AABB(by.x, by.y, by.w, by.h, s.x, s.y, s.w, s.h)) { blockedY = true; break; }
+                    }
+                    if (!blockedY) this.y = ny;
+
+                    // --- Guardar dirección de movimiento para sprites ---
+                    this.vx = this.x - (this.lastX ?? this.x);
+                    this.vy = this.y - (this.lastY ?? this.y);
+                    this.lastX = this.x;
+                    this.lastY = this.y;
+
+                }
+
+
+
+                // --- Ataques ---
+                this.attackTimer--;
+                if (this.attackTimer <= 0) {
+                    this.shootAtPlayer();
+
+                    if (this.phase >= 2) this.shootCross();
+                    if (this.phase >= 3) this.shootRain();
+
+                    if (this.phase === 1) this.attackTimer = 90;
+                    if (this.phase === 2) this.attackTimer = 70;
+                    if (this.phase === 3) this.attackTimer = 50;
+                }
+
+                // --- Cambios de fase ---
+                if (this.hp < this.maxHp * 0.66 && this.phase < 2) {
+                    this.phase = 2;
+                }
+                if (this.hp < this.maxHp * 0.33 && this.phase < 3) {
+                    this.phase = 3;
+                }
+            }
+
+            // Dispara proyectiles en dirección al jugador
+            shootAtPlayer() {
+                let dx = world.player.x - this.x;
+                let dy = world.player.y - this.y;
+                let dist = Math.hypot(dx, dy);
+                if (dist === 0) return;
+                dx /= dist; dy /= dist;
+                world.bullets.push(new Bullet(this.x, this.y, dx * 4, dy * 4, 'e'));
+                sfx(80, .15, 'square', .02);
+            }
+
+            // Ráfaga en cruz (fase 2+)
+            shootCross() {
+                const dirs = [
+                    [1, 0], [-1, 0], [0, 1], [0, -1]
+                ];
+                for (let [dx, dy] of dirs) {
+                    world.bullets.push(new Bullet(this.x, this.y, dx * 3, dy * 3, 'e'));
+                }
+                sfx(90, .15, 'square', .01);
+            }
+
+            // Lluvia de balas (fase 3+)
+            shootRain() {
+                for (let i = 0; i < 5; i++) {
+                    let offset = (Math.random() - 0.5) * 200;
+                    world.bullets.push(new Bullet(this.x + offset, this.y, 0, 3 + Math.random() * 2, 'e'));
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x - camera.x, this.y - camera.y);
+                ctx.globalAlpha = 0.95;
+
+                // Selección del sprite según dirección
+                let sprite = bossSprites.down;
+                if (Math.abs(this.vx) > Math.abs(this.vy)) {
+                    if (this.vx > 0) sprite = bossSprites.right;
+                    else if (this.vx < 0) sprite = bossSprites.left;
+                } else {
+                    if (this.vy > 0) sprite = bossSprites.down;
+                    else if (this.vy < 0) sprite = bossSprites.up;
+                }
+                // diagonales
+                if (this.vx > 0 && this.vy < 0) sprite = bossSprites.up_right;
+                if (this.vx < 0 && this.vy < 0) sprite = bossSprites.up_left;
+                if (this.vx > 0 && this.vy > 0) sprite = bossSprites.down_right;
+                if (this.vx < 0 && this.vy > 0) sprite = bossSprites.down_left;
+
+                // dibuja 70% más grande
+                const scale = 1.7;
+                ctx.drawImage(
+                    sprite,
+                    -this.w * scale,
+                    -this.h * scale,
+                    this.w * 2 * scale,
+                    this.h * 2 * scale
+                );
+
+                ctx.restore();
+
+                // Barra de vida
+                const barW = 200, barH = 16;
+                const pct = this.hp / this.maxHp;
+                ctx.fillStyle = '#111';
+                ctx.fillRect(W / 2 - barW / 2, 20, barW, barH);
+
+                const grad = ctx.createLinearGradient(W / 2 - barW / 2, 0, W / 2 + barW / 2, 0);
+                grad.addColorStop(0, '#ff5b5b');
+                grad.addColorStop(1, '#ff0000');
+                ctx.fillStyle = grad;
+                ctx.fillRect(W / 2 - barW / 2, 20, barW * pct, barH);
+
+                ctx.strokeStyle = '#fff';
+                ctx.strokeRect(W / 2 - barW / 2, 20, barW, barH);
+            }
+
+
+            kill() {
+                this.alive = false;
+                camera.shake = 20;
+                sfx(100, .3, 'triangle', .06);
+                bloodBurst(this.x, this.y, '#ff3b3b');
+                world.win = true;
+                renderOverlay();
+                $('#bossName').style.opacity = 0;
+                world.powerUps.push(new PowerUp(this.x, this.y, "rain"));
+
+            }
+        }
+
+        // Bullet
+        class Bullet {
+            constructor(x, y, vx, vy, from) { this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.from = from; this.life = 70; }
+            update() {
+                this.x += this.vx; this.y += this.vy; this.life--; if (this.life <= 0) this.dead = true;
+                for (const s of world.solids) { if (AABB(this.x - 2, this.y - 2, 4, 4, s.x, s.y, s.w, s.h)) { this.dead = true; pop(this.x, this.y); } }
+                if (this.dead) return;
+                if (this.from === 'p') { for (const e of world.enemies) { if (e.alive && Math.hypot(this.x - e.x, this.y - e.y) < 12) { e.damage(TUNING.dmgFromPlayerBullet); this.dead = true; scoreKillPartial(e); break; } } }
+                else { if (world.player.alive && Math.hypot(this.x - world.player.x, this.y - world.player.y) < 12) { world.player.damage(TUNING.dmgFromEnemyBullet); this.dead = true; } }
+            }
+            draw() { ctx.fillStyle = this.from === 'p' ? Colors.gold : Colors.danger; ctx.fillRect(this.x - 2 - camera.x, this.y - 2 - camera.y, 4, 4); }
+        }
+
+
+        class PowerUp {
+            constructor(x, y, type, permanent = false) {
+                this.x = x;
+                this.y = y;
+                this.w = 16;
+                this.h = 16;
+                this.type = type;
+                this.permanent = permanent;
+                this.life = permanent ? Infinity : 600; // infinito si viene del mapa
+            }
+
+
+            update() {
+                if (!this.permanent) {
+                    this.life--;
+                    if (this.life <= 0) this.dead = true;
+                }
+
+                // Colisión con jugador
+                if (world.player.alive &&
+                    Math.hypot(this.x - world.player.x, this.y - world.player.y) < 18) {
+                    this.applyEffect(world.player);
+                    this.dead = true;
+                }
+            }
+
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x - camera.x, this.y - camera.y);
+                ctx.fillStyle =
+                    this.type === "heal" ? "#4ade80" :
+                        this.type === "rapid" ? "#facc15" :
+                            this.type === "speed" ? "#60a5fa" :
+                                "#ff3b3b"; // lluvia del boss
+                ctx.beginPath();
+                ctx.arc(0, 0, 8, 0, TAU);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            applyEffect(p) {
+                if (this.type === "heal") {
+                    p.heal(20);
+                } else if (this.type === "rapid") {
+                    if (p._rapidTimer) clearTimeout(p._rapidTimer);
+                    p.cdBoost = 0.5;
+                    p._rapidTimer = setTimeout(() => { p.cdBoost = 1; p._rapidTimer = null; }, 10000);
+                    activePowerupTimeouts.push(p._rapidTimer);
+                } else if (this.type === "speed") {
+                    if (p._speedTimer) clearTimeout(p._speedTimer);
+                    p.speedBoost = 1.5;
+                    p._speedTimer = setTimeout(() => { p.speedBoost = 1; p._speedTimer = null; }, 10000);
+                    activePowerupTimeouts.push(p._speedTimer);
+                } else if (this.type === "rain") {
+                    if (p._rainTimer) clearTimeout(p._rainTimer);
+                    p.rainMode = true;
+                    p._rainTimer = setTimeout(() => { p.rainMode = false; p._rainTimer = null; }, 30000);
+                    activePowerupTimeouts.push(p._rainTimer);
+                }
+            }
+
+        }
+
+
+        // EFFECTS / SCORE
+        function pop(x, y) { world.particles.push({ x, y, life: 20 }) }
+        function bloodBurst(x, y, col) { for (let i = 0; i < 20; i++) { world.blood.push({ x, y, vx: Math.cos(rnd(0, TAU)) * rnd(.5, 3), vy: Math.sin(rnd(0, TAU)) * rnd(.5, 3), life: 80, color: col }) } }
+        function scoreKillPartial(e) { const add = Math.floor(20 * world.combo); world.score += add; world.combo = Math.min(5, world.combo + 0.05); world.comboDecay = 180; $('#hudScore').textContent = 'Puntuación: ' + world.score; $('#hudCombo').textContent = 'Combo ×' + world.combo.toFixed(2); }
+        function scoreKillFinal() { const add = Math.floor(80 * world.combo); world.score += add; world.combo = Math.min(5, world.combo + 0.20); world.comboDecay = 200; $('#hudScore').textContent = 'Puntuación: ' + world.score; $('#hudCombo').textContent = 'Combo ×' + world.combo.toFixed(2); }
+
+        // LEVEL
+        const map = [
+            "111111111111111111111111111111111111111111111111111111111111",
+            "111111111111111111111111111111111111111111111111111111111111",
+            "11P000010000000000100000000000001111111111111111111111111111",
+            "110000010000000000100000000000001111111111111111111111111111",
+            "110000010100000010100000000000001000000000000000001001001001",
+            "110000010100110010100000111100001000000000000000001001001001",
+            "111110010100110010100000111100001000011111111100001001001001",
+            "111110010100110010100000000000001000011111111100001001001001",
+            "111000010000000000100001111111111000000000000000000000000001",
+            "111000000000000000000001111111111000000000000000E00000000001",
+            "111000000000000000000000000000001000000000000000000000000001",
+            "111000000000000000000000000000001111111111111111111000000111",
+            "110000110000111100011110000000001111111111111111111000000111",
+            "110000110000111100011110000000001111111100100000000000000111",
+            "110000110000111100011110000000000000000001110000000000000001",
+            "110000110000111100011110000000000000000000100000000000000001",
+            "110000000000000000000000000000000000000000000000000000000001",
+            "1111111100000000000000000000E0000000000000000000000000000001",
+            "111111110000000000000000000000001000000000000000000000000001",
+            "110000000000011111110011111001111110001111000000000000000001",
+            "11000000000E000000000010000000001000000001000111100001111001",
+            "110000000000000000000010000000001000000001000000000000000001",
+            "110001111000011110000010111000001000001001000000000000000001",
+            "110001111000011110000010111000001000011101000000000001111001",
+            "110001111000011110000010000000001000001001100111100001111001",
+            "110001111000011110000010000001001010000001100111100001111001",
+            "110000000000E00000000010000011101111000001100111100001111001",
+            "110000000000000000000010000001001010000001100000000000000001",
+            "11000000010000000000001000000000100000000110000000000G000001",
+            "111111111111111111111111111111111111111111111111111111111111",
+            "111111111111111111111111111111111111111111111111111111111111",
+            "111111111111111111111111111111111111111111111111111111111111",
+            "111111111111111111111111111111111111111111111111111111111111",
+            "111111111111111111111111111111111111111111111111111111111111"
+        ];
+        function buildLevel() {
+            world.tiles = []; world.solids = []; world.doors = []; world.enemies = []; world.bullets = []; world.blood = []; world.particles = []; world.score = 0; world.combo = 1; world.comboDecay = 0; world.over = false; world.win = false; world.time = 0; world.powerUps = [];
+            world.difficulty = 0; world.nextSpawn = 0; world.boss = null; world.lastBoss = 0;
+            for (let y = 0; y < map.length; y++) {
+                for (let x = 0; x < map[y].length; x++) {
+                    const c = map[y][x]; const rx = x * TILE, ry = y * TILE;
+                    if (c === '1') { world.solids.push({ x: rx, y: ry, w: TILE, h: TILE }); }
+                    if (c === 'P') { world.player = new Player(rx + TILE / 2, ry + TILE / 2); }
+                    if (c === 'G') { world.goal.x = rx + TILE / 2; world.goal.y = ry + TILE / 2; }
+                    if (c === 'E') { world.enemies.push(new Enemy(rx + TILE / 2, ry + TILE / 2)); }
+                    if (c === '0' && Math.random() < 0.005) { // 5% de chance
+                        const types = ["heal", "rapid", "speed"];
+                        const t = types[(Math.random() * types.length) | 0];
+                        world.powerUps.push(new PowerUp(rx + TILE / 2, ry + TILE / 2, t, true));
+
+                    }
+
+                }
+            }
+            $('#hudScore').textContent = 'Puntuación: 0'; $('#hudCombo').textContent = 'Combo ×1.00'; updateHPUI(); $('#hudDifficulty').textContent = 'Dificultad: 0';
+        }
+
+        // HUD
+        function updateHPUI() { if (!world.player) return; const p = world.player; const pct = (p.hp / p.maxHp) * 100; $('#hpFill').style.width = pct + '%'; $('#hpLabel').textContent = `HP ${p.hp | 0}/${p.maxHp}`; const wrap = $('#hudHP'); if (pct <= 33) wrap.classList.add('hpLow'); else wrap.classList.remove('hpLow'); }
+
+        // PAUSE / RESET
+        function togglePause() { world.paused = !world.paused; renderOverlay(); }
+        $('#btnPause').onclick = () => togglePause(); $('#btnReset').onclick = () => resetGame();
+        function resetGame() {
+            // cancelar timeouts de powerups
+            for (const t of activePowerupTimeouts) clearTimeout(t);
+            activePowerupTimeouts.length = 0;
+
+            buildLevel();
+            world.paused = false;
+            overlay.innerHTML = '';
+            overlay.style.pointerEvents = "none"; // 👈 importante para que el canvas reciba clics
+
+            // resetear input
+            mouse.down = false;
+            mouse.x = 0;
+            mouse.y = 0;
+
+            // asegurar que el jugador empieza limpio
+            world.player.cd = 0;
+            world.player.cdBoost = 1;
+            world.player.speedBoost = 1;
+            world.player.rainMode = false;
+            world.player._rapidTimer = null;
+            world.player._speedTimer = null;
+            world.player._rainTimer = null;
+
+            // ocultar barra/nombre del boss al reiniciar
+            $('#bossName').textContent = '';
+            $('#bossName').style.opacity = 0;
+            $('#bossBarWrap').style.display = 'none';
+        }
+
+
+
+
+
+        // UPDATE / DRAW
+        function update() {
+            if (world.paused || world.over) return;
+            world.time++; const seconds = Math.floor(world.time / 60); const mm = String(Math.floor(seconds / 60)).padStart(2, '0'); const ss = String(seconds % 60).padStart(2, '0'); $('#hudTime').textContent = `${mm}:${ss}`;
+            if (world.time % 60 === 0) { world.difficulty++; $('#hudDifficulty').textContent = 'Dificultad: ' + world.difficulty; }
+
+            // Spawn Enemies
+            if (world.time > world.nextSpawn) {
+                const base = 600, minI = 120; const interval = Math.max(minI, base - world.difficulty * 5); world.nextSpawn = world.time + interval;
+                let tries = 0; while (tries < 8) {
+                    tries++; const rx = (2 + Math.floor(rnd(0, map[0].length - 4))) * TILE + TILE / 2; const ry = (2 + Math.floor(rnd(0, map.length - 4))) * TILE + TILE / 2;
+                    if (Math.hypot(rx - world.player.x, ry - world.player.y) > 120) { let ok = true; for (const s of world.solids) { if (AABB(rx - 9, ry - 9, 18, 18, s.x, s.y, s.w, s.h)) { ok = false; break; } } if (ok) { const e = new Enemy(rx, ry); const hpBoost = Math.floor(world.difficulty / 15); e.maxHp = TUNING.enemyMaxHP + hpBoost; e.hp = e.maxHp; e.speed += Math.min(0.9, world.difficulty / 200); world.enemies.push(e); break; } }
+                }
+            }
+
+            world.player.update(); for (const e of world.enemies) e.update();
+            for (const b of world.bullets) b.update(); world.bullets = world.bullets.filter(b => !b.dead);
+            for (const b of world.blood) { b.x += b.vx; b.y += b.vy; b.vx *= .95; b.vy *= .95; if (b.life > 0) b.life--; } world.blood = world.blood.filter(b => b.life > -400);
+            for (const p of world.particles) p.life--; world.particles = world.particles.filter(p => p.life > 0);
+            for (const p of world.powerUps) p.update();
+            world.powerUps = world.powerUps.filter(p => !p.dead);
+            if (world.comboDecay > 0) { world.comboDecay--; if (world.comboDecay === 0) { world.combo = Math.max(1, world.combo - 0.25); world.comboDecay = 90 * (world.combo > 1 ? 1 : 0); $('#hudCombo').textContent = 'Combo ×' + world.combo.toFixed(2); } }
+
+
+            // Manejo del Boss
+            if (!world.boss || !world.boss.alive) {
+                // si ya pasó 60s desde el último spawn y ya se alcanzó dificultad 30
+                if (world.difficulty >= 30 && world.time - world.lastBoss >= 60 * 60) {
+                    world.boss = new Boss(world.goal.x - 100, world.goal.y - 100);
+                    world.enemies.push(world.boss);
+                    world.lastBoss = world.time; // guardamos el momento de aparición
+                }
+            } else {
+                world.boss.update();
+            }
+
+
+
+
+
+            // camera
+            camera.x = lerp(camera.x, world.player.x - W / 2, .15) + (camera.shake ? rnd(-camera.shake, camera.shake) : 0);
+            camera.y = lerp(camera.y, world.player.y - H / 2, .15) + (camera.shake ? rnd(-camera.shake, camera.shake) : 0);
+            camera.x = clamp(camera.x, 0, map[0].length * TILE - W);
+            camera.y = clamp(camera.y, 0, map.length * TILE - H);
+            camera.shake = Math.max(0, camera.shake - 1);
+
+            // Reaparición automática de powerups cada 60s
+            if (world.time % (60 * 60) === 0) {
+                // número de powerups a reaparecer
+                let num = 2 + Math.floor(Math.random() * 3); // 2 a 4
+                for (let i = 0; i < num; i++) {
+                    let tries = 0;
+                    while (tries < 20) {
+                        tries++;
+                        const rx = (2 + Math.floor(rnd(0, map[0].length - 4))) * TILE + TILE / 2;
+                        const ry = (2 + Math.floor(rnd(0, map.length - 4))) * TILE + TILE / 2;
+
+                        // que no caigan dentro de muros ni demasiado cerca del jugador
+                        if (Math.hypot(rx - world.player.x, ry - world.player.y) > 80) {
+                            let ok = true;
+                            for (const s of world.solids) {
+                                if (AABB(rx - 8, ry - 8, 16, 16, s.x, s.y, s.w, s.h)) { ok = false; break; }
+                            }
+                            if (ok) {
+                                const types = ["heal", "rapid", "speed"];
+                                const t = types[(Math.random() * types.length) | 0];
+                                world.powerUps.push(new PowerUp(rx, ry, t));
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
+        function drawGrid() { const sx = Math.floor(camera.x / TILE) - 1, ex = Math.ceil((camera.x + W) / TILE) + 1, sy = Math.floor(camera.y / TILE) - 1, ey = Math.ceil((camera.y + H) / TILE) + 1; for (let y = sy; y < ey; y++) { for (let x = sx; x < ex; x++) { if (x < 0 || y < 0 || y >= map.length || x >= map[0].length) continue; const rx = x * TILE - camera.x, ry = y * TILE - camera.y; const c = map[y][x]; if (c === '1') { ctx.fillStyle = Colors.wall; ctx.fillRect(rx, ry, TILE, TILE); ctx.strokeStyle = Colors.trim; ctx.strokeRect(rx + .5, ry + .5, TILE - 1, TILE - 1); } else { ctx.fillStyle = Colors.floor; ctx.fillRect(rx, ry, TILE, TILE); if (((x + y) & 1) === 0) { ctx.globalAlpha = .06; ctx.fillStyle = '#8da2b6'; ctx.fillRect(rx, ry, TILE, TILE); ctx.globalAlpha = 1; } } } } }
+
+        function postFX() { const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .2, W / 2, H / 2, Math.max(W, H) * .6); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.55)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = .07; for (let y = 0; y < H; y += 2) { ctx.fillStyle = '#000'; ctx.fillRect(0, y, W, 1); } ctx.globalAlpha = 1; }
+
+        // --- MAPA COMO IMAGEN ---
+        const mapImage = new Image();
+        mapImage.src = "./Map.png"; // pon el path correcto a tu archivo
+
+        function render() {
+            ctx.clearRect(0, 0, W, H);
+
+            // Dibuja la imagen del mapa con la cámara
+            ctx.drawImage(mapImage, -camera.x, -camera.y);
+
+            // Objetivo dorado
+            ctx.fillStyle = Colors.acc;
+            ctx.beginPath();
+            ctx.arc(world.goal.x - camera.x, world.goal.y - camera.y, 10, 0, TAU);
+            ctx.fill();
+
+            // Sangre
+            for (const b of world.blood) {
+                ctx.globalAlpha = clamp((b.life + 400) / 480, 0.8, 0.95);
+                ctx.fillStyle = b.color;
+                ctx.fillRect(b.x - 1 - camera.x, b.y - 1 - camera.y, 2, 2);
+                ctx.globalAlpha = 1;
+            }
+
+            // Enemigos, balas, jugador, partículas
+            for (const e of world.enemies) if (e.alive) e.draw();
+            for (const bu of world.bullets) bu.draw();
+            world.player.draw();
+            for (const p of world.particles) {
+                ctx.globalAlpha = p.life / 20;
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(p.x - 1 - camera.x, p.y - 1 - camera.y, 2, 2);
+                ctx.globalAlpha = 1;
+            }
+
+            for (const p of world.powerUps) p.draw();
+
+
+            // Mensaje de inicio
+            if (world.time < 240) {
+                ctx.globalAlpha = .9;
+                ctx.fillStyle = 'rgba(10,14,20,.75)';
+                ctx.fillRect(W / 2 - 200, 40, 400, 40);
+                ctx.strokeStyle = '#2a3547';
+                ctx.strokeRect(W / 2 - 200 + .5, 40 + .5, 399, 39);
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = '#fff';
+                ctx.font = '18px system-ui, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('La Oficina de Scranton', W / 2, 66);
+                ctx.textAlign = 'left';
+            }
+
+            postFX();
+
+            if (world.boss && world.boss.alive) world.boss.draw();
+        }
+
+
+        function renderOverlay() {
+            overlay.innerHTML = '';
+
+            if (world.paused) {
+                overlay.style.pointerEvents = "auto"; // habilitar clics
+                overlay.innerHTML = `
+          <div class="panel">
+            <h2 class="title">Pausa</h2>
+            <p>WASD para moverte · Ratón para apuntar · Click para disparar · Espacio para dash · R para reiniciar</p>
+            <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:20px;">
+              <button class='btn' id='resume'>Reanudar</button>
+              <button class='btn' id='restart'>Reiniciar</button>
+              <button class='btn' id='exit'>Salir</button>
+            </div>
+          </div>
+        `;
+                $('#resume').onclick = () => togglePause();
+                $('#restart').onclick = () => resetGame();
+                $('#exit').onclick = () => { world.over = true; world.win = false; renderOverlay(); };
+                return;
+            }
+
+            if (world.over) {
+                overlay.style.pointerEvents = "auto"; // habilitar clics también aquí
+                if (world.win) {
+                    overlay.innerHTML = `
+              <div class='panel'>
+                <h2 class='title'>✅ Misión cumplida</h2>
+                <p>Puntuación: <b>${world.score}</b> · Tiempo: <b>${$('#hudTime').textContent}</b> · Dificultad: <b>${world.difficulty}</b></p>
+                <div style='display:flex;gap:8px;justify-content:center'>
+                  <button class='btn' id='again'>Jugar otra vez</button>
+                </div>
+              </div>`;
+                    $('#again').onclick = () => resetGame();
+                } else {
+                    overlay.innerHTML = `
+              <div class='panel'>
+                <h2 class='title'>💀 GAME OVER</h2>
+                <p>Puntuación: <b>${world.score}</b> · Dificultad: <b>${world.difficulty}</b></p>
+                <div style='display:flex;gap:8px;justify-content:center'>
+                  <button class='btn' id='try'>Reintentar</button>
+                </div>
+              </div>`;
+                    $('#try').onclick = () => resetGame();
+                }
+                return;
+            }
+
+            // si no hay overlay, quitar eventos
+            overlay.style.pointerEvents = "none";
+        }
+
+        if (isMobile) {
+            $('#touchControls').style.display = 'block';
+
+            // --- Joystick ---
+            const joy = $('#joystick');
+            let joyActive = false, joyX = 0, joyY = 0;
+
+            joy.addEventListener('touchstart', e => {
+                e.preventDefault();
+                joyActive = true;
+            });
+            joy.addEventListener('touchmove', e => {
+                e.preventDefault();
+                const rect = joy.getBoundingClientRect();
+                const t = e.touches[0];
+                const dx = t.clientX - (rect.left + rect.width / 2);
+                const dy = t.clientY - (rect.top + rect.height / 2);
+                joyX = dx; joyY = dy;
+
+                // normaliza
+                let vx = dx, vy = dy;
+                const L = Math.hypot(vx, vy);
+                if (L > 0) { vx /= L; vy /= L; }
+
+                keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
+                if (vy < -20) keys.add("w");
+                if (vy > 20) keys.add("s");
+                if (vx < -20) keys.add("a");
+                if (vx > 20) keys.add("d");
+            });
+            joy.addEventListener('touchend', e => {
+                e.preventDefault();
+                joyActive = false;
+                keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
+            });
+
+            // --- Botón de disparo ---
+            const btnShoot = $('#btnShoot');
+            btnShoot.addEventListener('touchstart', e => { e.preventDefault(); mouse.down = true; });
+            btnShoot.addEventListener('touchend', e => { e.preventDefault(); mouse.down = false; });
+
+            // --- Botón de dash ---
+            const btnDash = $('#btnDash');
+            btnDash.addEventListener('touchstart', e => { e.preventDefault(); keys.add(" "); });
+            btnDash.addEventListener('touchend', e => { e.preventDefault(); keys.delete(" "); });
+        }
+
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas(); // 👈 se llama antes de iniciar el juego
+
+
+
+        function loop() {
+            try {
+                update();
+                render();
+            } catch (err) {
+                console.error("Loop error:", err);
+            }
+            requestAnimationFrame(loop);
+            console.log("Frame...");
+
+        }
+
+
+
+        function startGame() {
+            console.log("Start game ejecutado");
+            buildLevel();
+            loop();
+        }
+
+
+
+        window.addEventListener("load", () => {
+            startGame();
+        });
+
+    </script>
+</body>
+
+</html>:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto;}
 #wrap{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto}
 header, footer {
   display: flex;
