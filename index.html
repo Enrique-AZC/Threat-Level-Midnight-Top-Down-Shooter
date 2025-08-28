@@ -411,15 +411,14 @@
             left: 50px;
             width: 120px;
             height: 120px;
-            z-index: 4000;
-            /* encima del canvas */
             border-radius: 50%;
-            background: transparent;
-            /* 👈 nada de rectángulo */
             border: 2px solid #5a8dbd;
-            /* círculo visible */
+            background: rgba(20, 24, 32, 0.3);
             pointer-events: auto;
             touch-action: none;
+            overflow: hidden;
+            z-index: 9999;
+            /* 🔥 aseguramos que esté encima */
         }
 
         #joystick::after {
@@ -427,13 +426,14 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: rgba(90, 141, 189, 0.6);
             transform: translate(-50%, -50%);
             pointer-events: none;
         }
+
 
 
         #btnShoot,
@@ -1492,7 +1492,7 @@
         if (isMobile) {
             $('#touchControls').style.display = 'block';
 
-            const joy = $('#joystick');
+            const joy = document.getElementById('joystick');
             let activeTouch = null;
 
             joy.addEventListener('touchstart', e => {
@@ -1521,35 +1521,33 @@
                             if (vx < -threshold) keys.add("a");
                             if (vx > threshold) keys.add("d");
 
-                            // mover el stick visual
-                            joy.style.setProperty('--joyX', dx + 'px');
-                            joy.style.setProperty('--joyY', dy + 'px');
+                            // 🔥 mover el stick visual
+                            joy.style.setProperty("--joyX", dx + "px");
+                            joy.style.setProperty("--joyY", dy + "px");
+
+                            joy.style.setProperty("transform",
+                                `translate(${dx / 3}px, ${dy / 3}px)`); // pequeño feedback visible
                         }
                     }
                 };
 
-                const handleEnd = (e) => {
-                    let stillActive = false;
-                    for (let t of e.touches) {
-                        if (t.identifier === activeTouch) stillActive = true;
-                    }
-                    if (!stillActive) {
-                        // limpiar controles
-                        keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
-                        joy.style.setProperty('--joyX', '0px');
-                        joy.style.setProperty('--joyY', '0px');
-                        activeTouch = null;
+                const handleEnd = () => {
+                    keys.delete("w"); keys.delete("a"); keys.delete("s"); keys.delete("d");
+                    joy.style.setProperty("--joyX", "0px");
+                    joy.style.setProperty("--joyY", "0px");
+                    joy.style.setProperty("transform", "translate(0,0)");
+                    activeTouch = null;
 
-                        document.removeEventListener('touchmove', handleMove, { passive: false });
-                        document.removeEventListener('touchend', handleEnd, { passive: false });
-                        document.removeEventListener('touchcancel', handleEnd, { passive: false });
-                    }
+                    document.removeEventListener('touchmove', handleMove, { passive: false });
+                    document.removeEventListener('touchend', handleEnd, { passive: false });
+                    document.removeEventListener('touchcancel', handleEnd, { passive: false });
                 };
 
                 document.addEventListener('touchmove', handleMove, { passive: false });
                 document.addEventListener('touchend', handleEnd, { passive: false });
                 document.addEventListener('touchcancel', handleEnd, { passive: false });
             }, { passive: false });
+
 
 
             // --- Botón de disparo ---
