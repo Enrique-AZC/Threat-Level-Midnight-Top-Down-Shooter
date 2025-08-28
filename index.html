@@ -1569,21 +1569,19 @@
                     }
                 };
 
-                const handleEnd = (e) => {
-                    let stillActive = false;
-                    for (let t of e.touches) {
-                        if (t.identifier === activeTouch) stillActive = true;
-                    }
-                    if (!stillActive) {
-                        ["w", "a", "s", "d"].forEach(k => keys.delete(k));
-                        joy.style.transform = "translate(0,0)";
-                        activeTouch = null;
+                const handleEnd = () => {
+                    ["w", "a", "s", "d"].forEach(k => keys.delete(k));
+                    joy.style.transform = "translate(0,0)";
+                    activeTouch = null;
 
-                        document.removeEventListener('touchmove', handleMove, { passive: false });
-                        document.removeEventListener('touchend', handleEnd, { passive: false });
-                        document.removeEventListener('touchcancel', handleEnd, { passive: false });
-                    }
+                    document.removeEventListener('touchmove', handleMove, { passive: false });
+                    document.removeEventListener('touchend', handleEnd, { passive: false });
+                    document.removeEventListener('touchcancel', handleEnd, { passive: false });
                 };
+
+                document.addEventListener('touchmove', handleMove, { passive: false });
+                document.addEventListener('touchend', handleEnd, { passive: false });
+                document.addEventListener('touchcancel', handleEnd, { passive: false });
             }, { passive: false });
 
 
